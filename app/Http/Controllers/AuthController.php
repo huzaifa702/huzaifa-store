@@ -81,8 +81,8 @@ class AuthController extends Controller
         $sessionId = session()->getId();
         $guestCart = Cart::where('session_id', $sessionId)->with('items')->first();
 
-        if ($guestCart && auth()->check()) {
-            $userCart = Cart::firstOrCreate(['user_id' => auth()->id()]);
+        if ($guestCart && Auth::check()) {
+            $userCart = Cart::firstOrCreate(['user_id' => Auth::id()]);
 
             foreach ($guestCart->items as $item) {
                 $existing = $userCart->items()->where('product_id', $item->product_id)->first();

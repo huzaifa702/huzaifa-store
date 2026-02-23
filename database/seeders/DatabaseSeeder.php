@@ -14,25 +14,29 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create Admin
-        Admin::create([
-            'name' => 'M. Huzaifa',
-            'email' => 'mhuzaifa2503a@aptechorangi.com',
-            'password' => Hash::make('M.HUZAIFA5566'),
-            'role' => 'super_admin',
-        ]);
+        // Create Admin (safe for re-runs)
+        Admin::firstOrCreate(
+            ['email' => 'mhuzaifa2503a@aptechorangi.com'],
+            [
+                'name' => 'M. Huzaifa',
+                'password' => Hash::make('M.HUZAIFA5566'),
+                'role' => 'super_admin',
+            ]
+        );
 
-        // Create Test User
-        User::create([
-            'name' => 'Test User',
-            'email' => 'user@test.com',
-            'password' => Hash::make('password'),
-            'phone' => '03001234567',
-            'address' => '123 Main Street',
-            'city' => 'Lahore',
-            'state' => 'Punjab',
-            'zip_code' => '54000',
-        ]);
+        // Create Test User (safe for re-runs)
+        User::firstOrCreate(
+            ['email' => 'user@test.com'],
+            [
+                'name' => 'Test User',
+                'password' => Hash::make('password'),
+                'phone' => '03001234567',
+                'address' => '123 Main Street',
+                'city' => 'Lahore',
+                'state' => 'Punjab',
+                'zip_code' => '54000',
+            ]
+        );
 
         // Create Categories
         $categories = [
@@ -45,7 +49,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($categories as $cat) {
-            Category::create($cat);
+            Category::firstOrCreate(['slug' => $cat['slug']], $cat);
         }
 
         // Create Products — 6+ per category = 36+ total
@@ -254,15 +258,16 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($products as $index => $productData) {
-            $product = Product::create($productData);
+            $product = Product::firstOrCreate(['slug' => $productData['slug']], $productData);
 
             $seed = $imageSeeds[$index] ?? ($index + 200);
-            ProductImage::create([
-                'product_id' => $product->id,
-                'image_path' => "https://picsum.photos/seed/{$seed}/600/600",
-                'is_primary' => true,
-                'sort_order' => 0,
-            ]);
+            ProductImage::firstOrCreate(
+                ['product_id' => $product->id, 'is_primary' => true],
+                [
+                    'image_path' => "https://picsum.photos/seed/{$seed}/600/600",
+                    'sort_order' => 0,
+                ]
+            );
         }
     }
 }
