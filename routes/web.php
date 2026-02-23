@@ -14,6 +14,20 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\WishlistController;
 
+// Temporary database setup route (remove after first use)
+Route::get('/setup-database/{key}', function ($key) {
+    if ($key !== 'huzaifa2026secret') {
+        abort(404);
+    }
+    try {
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+        return 'Database setup complete! Admin and products created. You can now login at /admin/login. DELETE THIS ROUTE AFTER USE.';
+    } catch (\Exception $e) {
+        return 'Error: ' . $e->getMessage();
+    }
+});
+
 // Homepage
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
