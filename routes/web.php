@@ -14,18 +14,71 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\WishlistController;
 
-// Temporary database setup route (remove after first use)
+// Database setup route (protected by secret key)
 Route::get('/setup-database/{key}', function ($key) {
     if ($key !== 'huzaifa2026secret') {
         abort(404);
     }
+    $results = [];
+
+    // Step 1: Run migrations
     try {
         \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-        return 'Database setup complete! Admin and products created. You can now login at /admin/login. DELETE THIS ROUTE AFTER USE.';
+        $results[] = '✅ Migrations completed';
     } catch (\Exception $e) {
-        return 'Error: ' . $e->getMessage();
+        $results[] = '❌ Migration error: ' . $e->getMessage();
     }
+
+    // Step 2: Force create/update admin account
+    try {
+        $admin = \App\Models\Admin::where('email', 'mhuzaifa2503a@aptechorangi.com')->first();
+        if ($admin) {
+            $admin->update(['password' => \Illuminate\Support\Facades\Hash::make('M.HUZAIFA5566')]);
+            $results[] = '✅ Admin password RESET (account existed)';
+        } else {
+            \App\Models\Admin::create([
+                'name' => 'M. Huzaifa',
+                'email' => 'mhuzaifa2503a@aptechorangi.com',
+                'password' => \Illuminate\Support\Facades\Hash::make('M.HUZAIFA5566'),
+                'role' => 'super_admin',
+            ]);
+            $results[] = '✅ Admin account CREATED';
+        }
+    } catch (\Exception $e) {
+        $results[] = '❌ Admin setup error: ' . $e->getMessage();
+    }
+
+    // Step 3: Seed products (if empty)
+    try {
+        $productCount = \App\Models\Product::count();
+        if ($productCount === 0) {
+            \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
+            $results[] = '✅ Database seeded with products (' . \App\Models\Product::count() . ' products)';
+        } else {
+            $results[] = '✅ Products already exist (' . $productCount . ' products)';
+        }
+    } catch (\Exception $e) {
+        $results[] = '❌ Seeder error: ' . $e->getMessage();
+    }
+
+    // Step 4: Show stats
+    $results[] = '';
+    $results[] = '📊 Database Stats:';
+    try {
+        $results[] = '   Admin accounts: ' . \App\Models\Admin::count();
+        $results[] = '   Users: ' . \App\Models\User::count();
+        $results[] = '   Categories: ' . \App\Models\Category::count();
+        $results[] = '   Products: ' . \App\Models\Product::count();
+    } catch (\Exception $e) {
+        $results[] = '   Stats error: ' . $e->getMessage();
+    }
+
+    $results[] = '';
+    $results[] = '🔐 Admin Login: /admin/login';
+    $results[] = '   Email: mhuzaifa2503a@aptechorangi.com';
+    $results[] = '   Password: M.HUZAIFA5566';
+
+    return '<pre style="background:#1e293b;color:#e2e8f0;padding:2rem;font-family:monospace;font-size:14px;line-height:1.8;">' . implode("\n", $results) . '</pre>';
 });
 
 // Homepage
