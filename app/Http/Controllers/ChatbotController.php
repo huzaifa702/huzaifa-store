@@ -256,6 +256,7 @@ class ChatbotController extends Controller
      */
     private function renderEmailTemplate(string $type): string
     {
+        $storeUrl = config('app.url');
         $featuredProducts = Product::where('is_active', true)
             ->where('is_featured', true)
             ->with('primaryImage')
@@ -288,7 +289,7 @@ class ChatbotController extends Controller
                     {$productsHtml}
                 </table>
                 <div style="text-align:center;margin-top:24px;">
-                    <a href="http://localhost:8000" style="display:inline-block;padding:12px 32px;background:#6366f1;color:white;text-decoration:none;border-radius:8px;font-weight:bold;">Shop Now →</a>
+                    <a href="{$storeUrl}" style="display:inline-block;padding:12px 32px;background:#6366f1;color:white;text-decoration:none;border-radius:8px;font-weight:bold;">Shop Now →</a>
                 </div>
             </div>
             <p style="text-align:center;color:#94a3b8;font-size:12px;margin-top:16px;">
@@ -380,7 +381,7 @@ class ChatbotController extends Controller
             if ($orders->isEmpty()) {
                 return ['text' => "📦 You don't have any orders yet. Start shopping and your orders will appear here!", 'type' => 'text'];
             }
-            $list = $orders->map(fn($o) => "• Order **#{$o->id}** — Status: **{$o->status}** — Total: **$" . number_format($o->total, 2) . "**")->implode("\n");
+            $list = $orders->map(fn($o) => "• Order **#{$o->id}** — Status: **{$o->status}** — Total: **$" . number_format((float)$o->total, 2) . "**")->implode("\n");
             return ['text' => "📦 **Your Recent Orders:**\n\n{$list}\n\n[View all orders](/orders)", 'type' => 'text'];
         }
 
@@ -423,9 +424,10 @@ class ChatbotController extends Controller
         if (!empty($keywords)) {
             $query = Product::where('is_active', true);
             foreach ($keywords as $kw) {
-                $query->where(function($q) use ($kw) {
-                    $q->where('name', 'like', "%{$kw}%")
-                      ->orWhere('description', 'like', "%{$kw}%");
+                $kwLower = strtolower($kw);
+                $query->where(function($q) use ($kwLower) {
+                    $q->whereRaw('LOWER(name) LIKE ?', ["%{$kwLower}%"])
+                      ->orWhereRaw('LOWER(description) LIKE ?', ["%{$kwLower}%"]);
                 });
             }
             $products = $query->with('primaryImage', 'category')->take(4)->get()

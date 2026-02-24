@@ -12,6 +12,8 @@ class Admin extends Model
 
     protected function casts(): array
     {
-        return [];
+        return [
+            'password' => 'hashed',
+        ];
     }
 }

@@ -52,21 +52,34 @@
                     <textarea name="description" rows="4" class="w-full px-4 py-3 bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm">{{ old('description', $product->description) }}</textarea>
                 </div>
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Add More Images</label>
-                    <input type="file" name="images[]" multiple accept="image/*" class="w-full px-4 py-3 bg-slate-800 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-brand-50 file:text-brand-700 file:font-semibold">
                     @if($product->images->count())
-                    <div class="flex gap-2 mt-3 flex-wrap">
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Current Images</label>
+                    <div class="flex gap-3 mb-4 flex-wrap">
                         @foreach($product->images as $img)
-                        <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 relative">
-                            @if($img->image_path !== 'placeholder')
-                                <img src="{{ asset('storage/' . $img->image_path) }}" class="w-full h-full object-cover">
-                            @else
-                                <div class="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-lg">🖼️</div>
+                        <div class="relative group">
+                            <div class="w-20 h-20 rounded-lg overflow-hidden bg-gray-200 border border-white/10">
+                                @if($img->image_path !== 'placeholder' && !str_starts_with($img->image_path, 'http'))
+                                    <img src="{{ asset('storage/' . $img->image_path) }}" class="w-full h-full object-cover" alt="Product image">
+                                @elseif(str_starts_with($img->image_path, 'http'))
+                                    <img src="{{ $img->image_path }}" class="w-full h-full object-cover" alt="Product image">
+                                @else
+                                    <div class="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-lg">🖼️</div>
+                                @endif
+                            </div>
+                            <label class="flex items-center gap-1 mt-1 cursor-pointer">
+                                <input type="checkbox" name="delete_images[]" value="{{ $img->id }}" class="text-red-500 focus:ring-red-500 rounded w-3 h-3">
+                                <span class="text-xs text-red-400">Delete</span>
+                            </label>
+                            @if($img->is_primary)
+                                <span class="absolute top-0 right-0 bg-brand-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-bl-lg rounded-tr-lg">Primary</span>
                             @endif
                         </div>
                         @endforeach
                     </div>
                     @endif
+                    <label class="block text-sm font-medium text-gray-300 mb-1">{{ $product->images->count() ? 'Add More Images' : 'Upload Images' }}</label>
+                    <input type="file" name="images[]" multiple accept="image/*" class="w-full px-4 py-3 bg-slate-800 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-brand-50 file:text-brand-700 file:font-semibold">
+                    @error('images.*') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
                 <div class="flex items-center gap-6">
                     <label class="flex items-center gap-2 cursor-pointer">

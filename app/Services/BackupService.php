@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Storage;
 
 class BackupService
 {
-    public static function createBackup(int $adminId = null): Backup
+    public static function createBackup(?int $adminId = null): Backup
     {
         $filename = 'backup_' . date('Y_m_d_His') . '.sql';
         $directory = storage_path('app/backups');
@@ -53,18 +53,18 @@ class BackupService
 
     private static function createManualBackup(string $path): void
     {
-        $tables = \DB::select('SHOW TABLES');
+        $tables = \Illuminate\Support\Facades\DB::select('SHOW TABLES');
         $dbName = config('database.connections.mysql.database');
         $key = 'Tables_in_' . $dbName;
         $sql = "-- Database Backup: {$dbName}\n-- Date: " . date('Y-m-d H:i:s') . "\n\n";
 
         foreach ($tables as $table) {
             $tableName = $table->$key;
-            $createTable = \DB::select("SHOW CREATE TABLE `{$tableName}`");
+            $createTable = \Illuminate\Support\Facades\DB::select("SHOW CREATE TABLE `{$tableName}`");
             $sql .= "DROP TABLE IF EXISTS `{$tableName}`;\n";
             $sql .= $createTable[0]->{'Create Table'} . ";\n\n";
 
-            $rows = \DB::table($tableName)->get();
+            $rows = \Illuminate\Support\Facades\DB::table($tableName)->get();
             foreach ($rows as $row) {
                 $values = collect((array)$row)->map(function ($value) {
                     if (is_null($value)) return 'NULL';
@@ -107,7 +107,7 @@ class BackupService
         if ($returnVar !== 0) {
             // Try manual restore
             $sql = file_get_contents($path);
-            \DB::unprepared($sql);
+            \Illuminate\Support\Facades\DB::unprepared($sql);
         }
 
         return true;

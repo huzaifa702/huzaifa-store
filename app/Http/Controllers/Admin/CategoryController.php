@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class CategoryController extends Controller
@@ -73,8 +74,21 @@ class CategoryController extends Controller
             'sort_order' => $request->input('sort_order', 0),
         ];
 
+        // Handle image update: delete old, save new
         if ($request->hasFile('image')) {
+            // Delete old image from storage if it exists
+            if ($category->image && Storage::disk('public')->exists($category->image)) {
+                Storage::disk('public')->delete($category->image);
+            }
             $data['image'] = $request->file('image')->store('categories', 'public');
+        }
+
+        // Handle explicit image removal (checkbox "remove image")
+        if ($request->boolean('remove_image') && !$request->hasFile('image')) {
+            if ($category->image && Storage::disk('public')->exists($category->image)) {
+                Storage::disk('public')->delete($category->image);
+            }
+            $data['image'] = null;
         }
 
         $category->update($data);
@@ -87,12 +101,21 @@ class CategoryController extends Controller
     public function destroy(Category $category)
     {
         if ($category->products()->count() > 0) {
-            return back()->with('error', 'Cannot delete category with products. Remove products first.');
+            return back()->with('error', 'Cannot delete category with ' . $category->products()->count() . ' products. Remove or reassign them first.');
         }
 
-        ActivityLogService::log('category_deleted', "Category '{$category->name}' deleted", null, $category);
-        $category->delete();
+        try {
+            // Delete category image from storage
+            if ($category->image && Storage::disk('public')->exists($category->image)) {
+                Storage::disk('public')->delete($category->image);
+            }
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category deleted successfully!');
+            ActivityLogService::log('category_deleted', "Category '{$category->name}' deleted", null, $category);
+            $category->delete();
+
+            return redirect()->route('admin.categories.index')->with('success', 'Category deleted successfully!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to delete category: ' . $e->getMessage());
+        }
     }
 }

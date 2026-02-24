@@ -19,12 +19,21 @@
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-300 mb-1">Image</label>
-                <input type="file" name="image" accept="image/*" class="w-full px-4 py-3 bg-slate-800 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-brand-50 file:text-brand-700 file:font-semibold">
                 @if($category->image)
-                    <div class="mt-2">
-                        <img src="{{ asset('storage/' . $category->image) }}" class="w-20 h-20 rounded-lg object-cover">
+                    <div class="mb-3 flex items-start gap-4 p-3 bg-slate-800/50 rounded-xl">
+                        <img src="{{ asset('storage/' . $category->image) }}" class="w-24 h-24 rounded-lg object-cover border border-white/10" alt="Current image">
+                        <div class="flex flex-col gap-2">
+                            <p class="text-xs text-gray-400">Current Image</p>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" name="remove_image" value="1" class="text-red-500 focus:ring-red-500 rounded">
+                                <span class="text-sm text-red-400">Remove current image</span>
+                            </label>
+                        </div>
                     </div>
                 @endif
+                <label class="block text-xs text-gray-400 mb-1">{{ $category->image ? 'Upload new image (replaces current)' : 'Upload image' }}</label>
+                <input type="file" name="image" accept="image/*" class="w-full px-4 py-3 bg-slate-800 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-brand-50 file:text-brand-700 file:font-semibold">
+                @error('image') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>

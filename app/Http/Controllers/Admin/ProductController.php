@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\ProductImage;
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProductController extends Controller
@@ -17,7 +18,11 @@ class ProductController extends Controller
         $query = Product::with('category', 'primaryImage');
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $search = trim($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw('LOWER(sku) LIKE ?', ['%' . strtolower($search) . '%']);
+            });
         }
 
         if ($request->filled('category')) {
@@ -122,18 +127,42 @@ class ProductController extends Controller
             'stock' => $request->stock,
             'is_active' => $request->boolean('is_active', true),
             'is_featured' => $request->boolean('is_featured', false),
-            'meta_title' => $request->name,
-            'meta_description' => $request->short_description,
+            'meta_title' => $request->input('meta_title', $request->name),
+            'meta_description' => $request->input('meta_description', $request->short_description),
         ]);
 
+        // Handle deletion of specific images (from delete checkboxes)
+        if ($request->filled('delete_images')) {
+            foreach ($request->delete_images as $imageId) {
+                $img = ProductImage::where('id', $imageId)->where('product_id', $product->id)->first();
+                if ($img) {
+                    // Delete from storage (only local files, not URLs)
+                    if ($img->image_path && !str_starts_with($img->image_path, 'http') && Storage::disk('public')->exists($img->image_path)) {
+                        Storage::disk('public')->delete($img->image_path);
+                    }
+                    $img->delete();
+                }
+            }
+
+            // Re-assign primary if the primary image was deleted
+            if (!$product->images()->where('is_primary', true)->exists()) {
+                $firstImage = $product->images()->orderBy('sort_order')->first();
+                if ($firstImage) {
+                    $firstImage->update(['is_primary' => true]);
+                }
+            }
+        }
+
+        // Add new uploaded images
         if ($request->hasFile('images')) {
+            $existingCount = $product->images()->count();
             foreach ($request->file('images') as $index => $image) {
                 $path = $image->store('products', 'public');
                 ProductImage::create([
                     'product_id' => $product->id,
                     'image_path' => $path,
-                    'is_primary' => $product->images()->count() === 0 && $index === 0,
-                    'sort_order' => $product->images()->count() + $index,
+                    'is_primary' => $existingCount === 0 && $index === 0,
+                    'sort_order' => $existingCount + $index,
                 ]);
             }
         }
@@ -145,10 +174,35 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        ActivityLogService::log('product_deleted', "Product '{$product->name}' deleted", null, $product);
-        $product->delete();
+        try {
+            \Illuminate\Support\Facades\DB::beginTransaction();
 
-        return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully!');
+            // Nullify product_id in order_items to preserve order history
+            \App\Models\OrderItem::where('product_id', $product->id)
+                ->update(['product_id' => null]);
+
+            // Delete all product images from storage
+            foreach ($product->images as $img) {
+                if ($img->image_path && !str_starts_with($img->image_path, 'http') && Storage::disk('public')->exists($img->image_path)) {
+                    Storage::disk('public')->delete($img->image_path);
+                }
+            }
+
+            // Delete related records
+            $product->images()->delete();
+            $product->reviews()->delete();
+
+            ActivityLogService::log('product_deleted', "Product '{$product->name}' deleted", null, $product);
+
+            $product->forceDelete();
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully!');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return back()->with('error', 'Failed to delete product: ' . $e->getMessage());
+        }
     }
 
     public function toggleActive(Product $product)

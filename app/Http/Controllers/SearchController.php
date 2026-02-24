@@ -13,13 +13,38 @@ class SearchController extends Controller
         $query = Product::where('is_active', true)->with('primaryImage', 'category');
 
         if ($request->filled('q')) {
-            $search = $request->q;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('short_description', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%");
-            });
+            // Normalize: trim, collapse multiple spaces, lowercase
+            $rawSearch = preg_replace('/\s+/', ' ', trim($request->q));
+            $search = strtolower($rawSearch);
+
+            // Split into individual words for multi-word matching
+            $words = array_filter(explode(' ', $search));
+
+            if (!empty($words)) {
+                // Each word must appear in at least one searchable column (AND logic)
+                foreach ($words as $word) {
+                    $escapedWord = '%' . $word . '%';
+                    $query->where(function ($q) use ($escapedWord) {
+                        $q->whereRaw('LOWER(name) LIKE ?', [$escapedWord])
+                          ->orWhereRaw('LOWER(short_description) LIKE ?', [$escapedWord])
+                          ->orWhereRaw('LOWER(description) LIKE ?', [$escapedWord])
+                          ->orWhereRaw('LOWER(sku) LIKE ?', [$escapedWord]);
+                    });
+                }
+
+                // Order by relevance: exact phrase in name > partial name match > description match
+                $exactPhrase = '%' . $search . '%';
+                $firstWord = '%' . $words[0] . '%';
+                $query->orderByRaw("
+                    CASE
+                        WHEN LOWER(name) LIKE ? THEN 1
+                        WHEN LOWER(name) LIKE ? THEN 2
+                        WHEN LOWER(short_description) LIKE ? THEN 3
+                        WHEN LOWER(description) LIKE ? THEN 4
+                        ELSE 5
+                    END ASC
+                ", [$exactPhrase, $firstWord, $exactPhrase, $exactPhrase]);
+            }
         }
 
         if ($request->filled('category')) {
