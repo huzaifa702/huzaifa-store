@@ -194,7 +194,7 @@ class ProductController extends Controller
 
             ActivityLogService::log('product_deleted', "Product '{$product->name}' deleted", null, $product);
 
-            $product->forceDelete();
+            $product->delete();
 
             \Illuminate\Support\Facades\DB::commit();
 
