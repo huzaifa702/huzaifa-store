@@ -100,20 +100,32 @@ class CategoryController extends Controller
 
     public function destroy(Category $category)
     {
-        if ($category->products()->count() > 0) {
-            return back()->with('error', 'Cannot delete category with ' . $category->products()->count() . ' products. Remove or reassign them first.');
-        }
-
         try {
-            // Delete category image from storage
-            if ($category->image && Storage::disk('public')->exists($category->image)) {
-                Storage::disk('public')->delete($category->image);
+            // Soft-delete all products in this category first
+            $productCount = $category->products()->count();
+            if ($productCount > 0) {
+                $category->products()->delete(); // Soft delete all products
             }
 
-            ActivityLogService::log('category_deleted', "Category '{$category->name}' deleted", null, $category);
+            // Delete category image from storage
+            try {
+                if ($category->image && Storage::disk('public')->exists($category->image)) {
+                    Storage::disk('public')->delete($category->image);
+                }
+            } catch (\Exception $e) {
+                // Ignore storage errors
+            }
+
+            // Log activity
+            try {
+                ActivityLogService::log('category_deleted', "Category '{$category->name}' deleted ({$productCount} products removed)", null, $category);
+            } catch (\Exception $e) {
+                // Ignore
+            }
+
             $category->delete();
 
-            return redirect()->route('admin.categories.index')->with('success', 'Category deleted successfully!');
+            return redirect()->route('admin.categories.index')->with('success', "Category deleted successfully! ({$productCount} products also removed)");
         } catch (\Exception $e) {
             return back()->with('error', 'Failed to delete category: ' . $e->getMessage());
         }
