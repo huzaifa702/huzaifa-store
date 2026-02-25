@@ -19,6 +19,14 @@ class ChatbotController extends Controller
     }
 
     /**
+     * Show the dedicated chatbot page.
+     */
+    public function page()
+    {
+        return view('chatbot');
+    }
+
+    /**
      * Handle a chatbot message — uses rule-based first, then Google AI fallback.
      */
     public function chat(Request $request)

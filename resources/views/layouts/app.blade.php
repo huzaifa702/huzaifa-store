@@ -632,6 +632,10 @@
                             </div>
                         </div>
                     </div>
+                    <a href="{{ route('chatbot.page') }}"
+                        class="text-gray-300 hover:text-white font-medium transition-colors nav-link-anim flex items-center gap-1.5">
+                        <span class="text-lg">🤖</span> AI Agent
+                    </a>
                 </div>
 
                 <!-- Search + Icons -->

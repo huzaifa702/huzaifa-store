@@ -85,6 +85,7 @@ Route::get('/setup-database/{key}', function ($key) {
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Chatbot / AI Agent
+Route::get('/chatbot', [ChatbotController::class, 'page'])->name('chatbot.page');
 Route::post('/chatbot/chat', [ChatbotController::class, 'chat'])->name('chatbot.chat');
 Route::post('/chatbot/image-search', [ChatbotController::class, 'imageSearch'])->name('chatbot.image');
 Route::post('/chatbot/tts', [ChatbotController::class, 'synthesizeSpeech'])->name('chatbot.tts');

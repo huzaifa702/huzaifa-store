@@ -3,11 +3,20 @@
 @section('page-title', 'Products')
 
 @section('content')
-<div class="flex items-center justify-between mb-6">
+<div class="flex items-center justify-between mb-6 flex-wrap gap-3">
     <div>
-        <form action="{{ route('admin.products.index') }}" method="GET" class="flex gap-3">
+        <form action="{{ route('admin.products.index') }}" method="GET" class="flex gap-3 flex-wrap">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products..." class="px-4 py-2 bg-slate-900 rounded-xl border shadow-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 w-64">
-            <button type="submit" class="px-4 py-2 bg-brand-500 text-white rounded-xl text-sm font-semibold hover:bg-brand-600 transition-colors">Search</button>
+            <select name="category" class="px-4 py-2 bg-slate-900 rounded-xl border shadow-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 text-gray-300">
+                <option value="">All Categories</option>
+                @foreach($categories as $cat)
+                    <option value="{{ $cat->id }}" {{ request('category') == $cat->id ? 'selected' : '' }}>{{ $cat->name }} ({{ $cat->products_count ?? $cat->products()->count() }})</option>
+                @endforeach
+            </select>
+            <button type="submit" class="px-4 py-2 bg-brand-500 text-white rounded-xl text-sm font-semibold hover:bg-brand-600 transition-colors">Filter</button>
+            @if(request('search') || request('category'))
+                <a href="{{ route('admin.products.index') }}" class="px-4 py-2 bg-slate-700 text-gray-300 rounded-xl text-sm font-semibold hover:bg-slate-600 transition-colors">Clear</a>
+            @endif
         </form>
     </div>
     <a href="{{ route('admin.products.create') }}" class="px-6 py-2 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all text-sm">+ Add Product</a>

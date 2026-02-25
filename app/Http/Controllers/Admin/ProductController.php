@@ -30,7 +30,7 @@ class ProductController extends Controller
         }
 
         $products = $query->latest()->paginate(15);
-        $categories = Category::orderBy('sort_order')->get();
+        $categories = Category::withCount('products')->orderBy('sort_order')->get();
 
         return view('admin.products.index', compact('products', 'categories'));
     }
