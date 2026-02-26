@@ -720,6 +720,7 @@
             </form>
             <a href="{{ route('home') }}" class="block py-2.5 text-gray-300 font-medium hover:text-brand-400 transition-colors">Home</a>
             <a href="{{ route('products.index') }}" class="block py-2.5 text-gray-300 font-medium hover:text-brand-400 transition-colors">Products</a>
+            <a href="{{ route('chatbot.page') }}" class="block py-2.5 text-gray-300 font-medium hover:text-brand-400 transition-colors">🤖 AI Agent</a>
             @php $mobileCategories = \App\Models\Category::where('is_active', true)->orderBy('sort_order')->get(); @endphp
             <div class="border-t border-white/[0.06] pt-2 mt-2">
                 <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">Categories</p>
