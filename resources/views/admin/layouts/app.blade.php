@@ -23,23 +23,87 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * { font-family: 'Inter', system-ui, sans-serif; }
+        * { font-family: 'Inter', system-ui, sans-serif; box-sizing: border-box; }
+        html, body { overflow-x: hidden; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #020617; }
         ::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 3px; }
 
-        /* Admin Responsive */
-        @media (max-width: 768px) {
-            .grid-cols-2, .lg\:grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
-            .grid-cols-3, .lg\:grid-cols-3, .md\:grid-cols-3 { grid-template-columns: 1fr !important; }
-            table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
-            h1, h2, .text-2xl, .text-3xl { font-size: 1.25rem !important; }
-            .p-6 { padding: 1rem !important; }
-            canvas { max-height: 200px !important; }
+        /* ===== ADMIN RESPONSIVE ===== */
+
+        /* Tablets & small desktops */
+        @media (max-width: 1024px) {
+            .lg\:grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+            .lg\:grid-cols-3 { grid-template-columns: repeat(2, 1fr) !important; }
+            .lg\:col-span-2 { grid-column: span 1 !important; }
         }
+
+        /* Tablets / landscape phones */
+        @media (max-width: 768px) {
+            /* Grid layouts */
+            .grid-cols-2, .sm\:grid-cols-2 { grid-template-columns: repeat(2, 1fr) !important; }
+            .lg\:grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+            .grid-cols-3, .lg\:grid-cols-3, .md\:grid-cols-3 { grid-template-columns: 1fr !important; }
+            .lg\:col-span-2 { grid-column: span 1 !important; }
+
+            /* Tables — horizontal scroll */
+            table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+            table th, table td { padding: 0.5rem 0.75rem !important; font-size: 0.8rem !important; }
+
+            /* Typography */
+            h1, h2, .text-2xl, .text-3xl { font-size: 1.25rem !important; }
+            h3, .text-xl { font-size: 1rem !important; }
+
+            /* Spacing */
+            .p-6 { padding: 1rem !important; }
+            .px-6, .lg\:px-6 { padding-left: 1rem !important; padding-right: 1rem !important; }
+            .lg\:p-6 { padding: 0.75rem !important; }
+            .gap-6 { gap: 0.75rem !important; }
+            .mb-6, .mb-8 { margin-bottom: 1rem !important; }
+
+            /* Charts */
+            canvas { max-height: 200px !important; }
+
+            /* Stat cards */
+            .rounded-2xl { border-radius: 1rem !important; }
+
+            /* Form elements */
+            .flex.items-center.justify-between { flex-wrap: wrap; gap: 0.5rem; }
+        }
+
+        /* Small phones */
         @media (max-width: 480px) {
-            .grid-cols-2, .lg\:grid-cols-4 { grid-template-columns: 1fr !important; }
+            .grid-cols-2, .sm\:grid-cols-2 { grid-template-columns: 1fr !important; }
+            .lg\:grid-cols-4 { grid-template-columns: 1fr !important; }
+
+            /* Prevent iOS zoom on inputs */
             input, select, textarea { font-size: 16px !important; }
+
+            /* Buttons and actions */
+            .flex.items-center.gap-3 { gap: 0.375rem !important; }
+            button, a.inline-flex { font-size: 0.8rem !important; }
+
+            /* Sidebar overlay z-index */
+            [x-show="sidebarOpen"] { z-index: 45 !important; }
+
+            /* Content area */
+            main { padding: 0.5rem !important; }
+
+            /* Quick action cards */
+            .grid.grid-cols-2.gap-3 { grid-template-columns: 1fr !important; gap: 0.5rem !important; }
+
+            /* Stat card content */
+            .text-2xl { font-size: 1.1rem !important; }
+            .text-lg { font-size: 0.95rem !important; }
+            .w-12.h-12 { width: 2.5rem !important; height: 2.5rem !important; font-size: 1.25rem !important; }
+        }
+
+        /* Very small phones */
+        @media (max-width: 360px) {
+            .p-4 { padding: 0.5rem !important; }
+            .p-3 { padding: 0.375rem !important; }
+            .text-sm { font-size: 0.75rem !important; }
+            .text-xs { font-size: 0.65rem !important; }
         }
     </style>
     @yield('styles')
