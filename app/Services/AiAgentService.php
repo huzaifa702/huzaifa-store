@@ -165,12 +165,12 @@ class AiAgentService
     }
 
     /**
-     * Send marketing email via SMTP (Brevo) — 1 per 24h per email.
+     * Send marketing email via SMTP (Brevo).
      */
     public function sendMarketingEmail(string $email, string $subject, string $htmlBody, ?int $userId = null): array
     {
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) return ['success' => false, 'error' => 'Invalid email address.'];
-        if (!EmailLog::canSendMarketing($email)) return ['success' => false, 'error' => 'Email already sent to this address in the last 24 hours. Try again later.'];
+        // Removed 24h limit to allow sending multiple emails to the same address
 
         try {
             \Illuminate\Support\Facades\Mail::html($htmlBody, function ($message) use ($email, $subject) {
