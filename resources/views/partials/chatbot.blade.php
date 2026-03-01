@@ -17,7 +17,7 @@
          x-transition:leave-end="opacity-0 scale-90 translate-y-4"
          class="absolute bottom-20 right-0 w-[400px] max-w-[calc(100vw-2rem)] max-h-[560px] bg-dark-900/95 backdrop-blur-2xl rounded-3xl shadow-2xl shadow-black/60 border border-white/[0.08] flex flex-col overflow-hidden">
 
-        <!-- Header (NO voice toggle icon) -->
+        <!-- Header -->
         <div class="bg-gradient-to-r from-brand-600 via-brand-500 to-neon-cyan p-4 flex items-center gap-3">
             <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center text-xl backdrop-blur-sm">🤖</div>
             <div class="flex-1">
@@ -121,11 +121,15 @@
                         class="p-2 rounded-xl transition-all" title="Voice input">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
                 </button>
+                <!-- Stop Button (visible during generation) -->
+                <button x-show="isTyping" @click="stopGeneration()" class="p-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-xl transition-all animate-pulse" title="Stop generating">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+                </button>
                 <!-- Text Input -->
                 <input type="text" x-model="input" @keydown.enter="send()" :placeholder="isRecording ? '🎤 Listening...' : 'Ask me anything...'"
                        class="flex-1 px-4 py-2.5 bg-dark-800/60 border border-white/[0.06] rounded-xl text-sm text-gray-200 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-brand-500/50 transition-all">
                 <!-- Send Button -->
-                <button @click="send()" :disabled="!input.trim()" class="p-2.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl hover:shadow-lg hover:shadow-brand-500/25 transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105">
+                <button @click="send()" :disabled="!input.trim() || isTyping" class="p-2.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl hover:shadow-lg hover:shadow-brand-500/25 transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:scale-105">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                 </button>
             </div>
@@ -148,6 +152,9 @@ function aiAgent() {
         emailSending: false,
         emailStatus: '',
         emailSuccess: false,
+        // AbortController for cancelling fetch requests
+        chatAbortController: null,
+        ttsAbortController: null,
         messages: [
             { sender: 'bot', text: "👋 Hi! I'm the **Huzaifa Store AI Agent** — powered by advanced AI.\n\nI can help you with:\n🛍️ Product search & deals\n🧠 Any question (I use AI!)\n📸 Image analysis\n🔊 Listen to responses\n📧 Email exclusive deals\n\nTry the buttons below or just ask!", products: [], source: 'bot' }
         ],
@@ -169,6 +176,31 @@ function aiAgent() {
             });
         },
 
+        // ── STOP: Cancel ongoing request + audio ──
+        stopGeneration() {
+            // Abort the chat fetch request
+            if (this.chatAbortController) {
+                this.chatAbortController.abort();
+                this.chatAbortController = null;
+            }
+            // Abort any TTS fetch
+            if (this.ttsAbortController) {
+                this.ttsAbortController.abort();
+                this.ttsAbortController = null;
+            }
+            // Stop any playing audio
+            if (this.currentAudio) {
+                this.currentAudio.pause();
+                this.currentAudio.currentTime = 0;
+                this.currentAudio = null;
+                this.playingIndex = -1;
+            }
+            // Stop browser speech synthesis
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            // Reset UI state
+            this.isTyping = false;
+        },
+
         async send() {
             const msg = this.input.trim();
             if (!msg) return;
@@ -178,18 +210,28 @@ function aiAgent() {
             this.isTyping = true;
             this.scrollToBottom();
 
+            // Create AbortController for this request
+            this.chatAbortController = new AbortController();
+
             try {
                 const res = await fetch('/chatbot/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                    body: JSON.stringify({ message: msg })
+                    body: JSON.stringify({ message: msg }),
+                    signal: this.chatAbortController.signal
                 });
                 const data = await res.json();
                 this.isTyping = false;
+                this.chatAbortController = null;
                 this.messages.push({ sender: 'bot', text: data.reply, products: data.products || [], source: data.source || 'rules' });
             } catch (e) {
                 this.isTyping = false;
-                this.messages.push({ sender: 'bot', text: '😵 Oops! Something went wrong. Please try again.', products: [] });
+                this.chatAbortController = null;
+                if (e.name === 'AbortError') {
+                    this.messages.push({ sender: 'bot', text: '⏹️ Response stopped.', products: [], source: 'bot' });
+                } else {
+                    this.messages.push({ sender: 'bot', text: '😵 Oops! Something went wrong. Please try again.', products: [] });
+                }
             }
             this.scrollToBottom();
         },
@@ -203,6 +245,7 @@ function aiAgent() {
             this.isTyping = true;
             this.scrollToBottom();
 
+            this.chatAbortController = new AbortController();
             const formData = new FormData();
             formData.append('image', file);
 
@@ -210,14 +253,21 @@ function aiAgent() {
                 const res = await fetch('/chatbot/image-search', {
                     method: 'POST',
                     headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                    body: formData
+                    body: formData,
+                    signal: this.chatAbortController.signal
                 });
                 const data = await res.json();
                 this.isTyping = false;
+                this.chatAbortController = null;
                 this.messages.push({ sender: 'bot', text: data.reply, products: data.products || [], source: 'ai' });
             } catch (e) {
                 this.isTyping = false;
-                this.messages.push({ sender: 'bot', text: '😵 Could not analyze the image. Try again!', products: [] });
+                this.chatAbortController = null;
+                if (e.name === 'AbortError') {
+                    this.messages.push({ sender: 'bot', text: '⏹️ Image analysis stopped.', products: [], source: 'bot' });
+                } else {
+                    this.messages.push({ sender: 'bot', text: '😵 Could not analyze the image. Try again!', products: [] });
+                }
             }
             this.scrollToBottom();
             event.target.value = '';
@@ -228,6 +278,7 @@ function aiAgent() {
             // Toggle off if already playing this message
             if (this.playingIndex === index && this.currentAudio) {
                 this.currentAudio.pause();
+                this.currentAudio.currentTime = 0;
                 this.currentAudio = null;
                 this.playingIndex = -1;
                 return;
@@ -235,29 +286,38 @@ function aiAgent() {
             // Stop any current audio
             if (this.currentAudio) { this.currentAudio.pause(); this.currentAudio = null; }
             if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            // Abort previous TTS request if any
+            if (this.ttsAbortController) { this.ttsAbortController.abort(); }
 
             this.playingIndex = index;
+            this.ttsAbortController = new AbortController();
 
             try {
                 const res = await fetch('/chatbot/tts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                    body: JSON.stringify({ text: text })
+                    body: JSON.stringify({ text: text }),
+                    signal: this.ttsAbortController.signal
                 });
 
                 if (res.ok) {
                     const blob = await res.blob();
                     const url = URL.createObjectURL(blob);
                     this.currentAudio = new Audio(url);
-                    this.currentAudio.onended = () => { this.playingIndex = -1; this.currentAudio = null; };
-                    this.currentAudio.onerror = () => { this.playingIndex = -1; this.speakBrowser(text); };
+                    this.currentAudio.onended = () => { this.playingIndex = -1; this.currentAudio = null; URL.revokeObjectURL(url); };
+                    this.currentAudio.onerror = () => { this.playingIndex = -1; this.currentAudio = null; this.speakBrowser(text); };
                     this.currentAudio.play();
                 } else {
                     this.speakBrowser(text);
                 }
             } catch (e) {
-                this.speakBrowser(text);
+                if (e.name === 'AbortError') {
+                    this.playingIndex = -1;
+                } else {
+                    this.speakBrowser(text);
+                }
             }
+            this.ttsAbortController = null;
         },
 
         speakBrowser(text) {

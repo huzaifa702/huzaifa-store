@@ -482,6 +482,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const sendBtn = document.getElementById('sendBtn');
     let selectedImage = null;
 
+    // ── AbortController for real request cancellation ──
+    let chatAbortController = null;
+    let ttsAbortController = null;
+    let currentAudio = null;
+
     chatForm.addEventListener('submit', function(e) {
         e.preventDefault();
         const message = chatInput.value.trim();
@@ -518,24 +523,56 @@ document.addEventListener('DOMContentLoaded', function() {
         sendTextMessage(text);
     };
 
+    // ── STOP GENERATION: Cancel fetch + stop audio ──
+    window.stopGeneration = function() {
+        if (chatAbortController) {
+            chatAbortController.abort();
+            chatAbortController = null;
+        }
+        if (ttsAbortController) {
+            ttsAbortController.abort();
+            ttsAbortController = null;
+        }
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            currentAudio = null;
+        }
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        removeTyping();
+        sendBtn.disabled = false;
+        // Remove any stop buttons
+        document.querySelectorAll('.stop-gen-btn').forEach(b => b.remove());
+    };
+
     async function sendTextMessage(message) {
         appendUserMessage(message);
         chatInput.value = '';
         sendBtn.disabled = true;
         showTyping();
 
+        // Create AbortController
+        chatAbortController = new AbortController();
+
         try {
             const res = await fetch('/chatbot/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('input[name=_token]').value },
-                body: JSON.stringify({ message })
+                body: JSON.stringify({ message }),
+                signal: chatAbortController.signal
             });
             const data = await res.json();
             removeTyping();
+            chatAbortController = null;
             appendBotMessage(data);
         } catch (err) {
             removeTyping();
-            appendBotMessage({ reply: 'Sorry, something went wrong. Please try again.', type: 'text' });
+            chatAbortController = null;
+            if (err.name === 'AbortError') {
+                appendBotMessage({ reply: '⏹️ Response stopped.', type: 'text' });
+            } else {
+                appendBotMessage({ reply: 'Sorry, something went wrong. Please try again.', type: 'text' });
+            }
         }
         sendBtn.disabled = false;
     }
@@ -546,6 +583,7 @@ document.addEventListener('DOMContentLoaded', function() {
         sendBtn.disabled = true;
         showTyping();
 
+        chatAbortController = new AbortController();
         const formData = new FormData();
         formData.append('image', selectedImage);
         if (message) formData.append('message', message);
@@ -554,14 +592,21 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const res = await fetch('/chatbot/image-search', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                signal: chatAbortController.signal
             });
             const data = await res.json();
             removeTyping();
+            chatAbortController = null;
             appendBotMessage(data);
         } catch (err) {
             removeTyping();
-            appendBotMessage({ reply: 'Sorry, image analysis failed. Please try again.', type: 'text' });
+            chatAbortController = null;
+            if (err.name === 'AbortError') {
+                appendBotMessage({ reply: '⏹️ Image analysis stopped.', type: 'text' });
+            } else {
+                appendBotMessage({ reply: 'Sorry, image analysis failed. Please try again.', type: 'text' });
+            }
         }
         clearImage();
         sendBtn.disabled = false;
@@ -582,7 +627,6 @@ document.addEventListener('DOMContentLoaded', function() {
         div.className = 'flex gap-3';
         let content = '';
 
-        // The server returns 'reply' key, not 'text'
         const replyText = data.reply || data.text || '';
 
         if (data.type === 'products' && data.products && data.products.length > 0) {
@@ -627,7 +671,15 @@ document.addEventListener('DOMContentLoaded', function() {
         div.className = 'flex gap-3';
         div.innerHTML = `<div class="chatbot-avatar-sm">🤖</div>
             <div class="chatbot-bot-bubble">
-                <div class="flex gap-1.5"><div class="w-2 h-2 bg-brand-400 rounded-full typing-dot"></div><div class="w-2 h-2 bg-brand-400 rounded-full typing-dot"></div><div class="w-2 h-2 bg-brand-400 rounded-full typing-dot"></div></div>
+                <div class="flex gap-1.5 items-center">
+                    <div class="w-2 h-2 bg-brand-400 rounded-full typing-dot"></div>
+                    <div class="w-2 h-2 bg-brand-400 rounded-full typing-dot"></div>
+                    <div class="w-2 h-2 bg-brand-400 rounded-full typing-dot"></div>
+                    <button onclick="stopGeneration()" class="stop-gen-btn ml-3 px-3 py-1 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg text-xs font-semibold transition-all flex items-center gap-1" style="border:none;cursor:pointer;">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+                        Stop
+                    </button>
+                </div>
             </div>`;
         chatMessages.appendChild(div);
         scrollToBottom();
@@ -652,39 +704,100 @@ document.addEventListener('DOMContentLoaded', function() {
         return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
-    // ===== FIXED TTS: Handle raw binary audio response =====
+    // ===== FIXED TTS: ElevenLabs with browser speech fallback =====
     window.listenToResponse = async function(btn) {
         const text = btn.dataset.text;
         if (!text) return;
+
+        // If currently playing, stop it
+        if (btn.dataset.playing === 'true') {
+            if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; currentAudio = null; }
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            if (ttsAbortController) { ttsAbortController.abort(); ttsAbortController = null; }
+            btn.innerHTML = '<span>🔊</span> <span>Listen</span>';
+            btn.dataset.playing = 'false';
+            return;
+        }
+
+        // Stop any other playing audio first
+        if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
         btn.innerHTML = '<span>⏳</span> <span>Loading...</span>';
+        btn.dataset.playing = 'true';
+
+        ttsAbortController = new AbortController();
+
         try {
             const res = await fetch('/chatbot/tts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('input[name=_token]').value },
-                body: JSON.stringify({ text })
+                body: JSON.stringify({ text }),
+                signal: ttsAbortController.signal
             });
+            ttsAbortController = null;
+
             if (res.ok) {
                 const blob = await res.blob();
-                const audioUrl = URL.createObjectURL(blob);
-                const audio = new Audio(audioUrl);
-                audio.play();
-                btn.innerHTML = '<span>🔊</span> <span>Playing...</span>';
-                audio.onended = () => {
-                    btn.innerHTML = '<span>🔊</span> <span>Listen</span>';
-                    URL.revokeObjectURL(audioUrl);
-                };
-                audio.onerror = () => {
-                    btn.innerHTML = '<span>🔊</span> <span>Listen</span>';
-                    URL.revokeObjectURL(audioUrl);
-                };
+                if (blob.size > 0 && blob.type.includes('audio')) {
+                    const audioUrl = URL.createObjectURL(blob);
+                    currentAudio = new Audio(audioUrl);
+                    btn.innerHTML = '<span>⏹️</span> <span>Stop</span>';
+                    currentAudio.play();
+                    currentAudio.onended = () => {
+                        btn.innerHTML = '<span>🔊</span> <span>Listen</span>';
+                        btn.dataset.playing = 'false';
+                        currentAudio = null;
+                        URL.revokeObjectURL(audioUrl);
+                    };
+                    currentAudio.onerror = () => {
+                        btn.dataset.playing = 'false';
+                        currentAudio = null;
+                        URL.revokeObjectURL(audioUrl);
+                        speakBrowserFallback(text, btn);
+                    };
+                } else {
+                    // Not valid audio, use browser fallback
+                    speakBrowserFallback(text, btn);
+                }
             } else {
-                btn.innerHTML = '<span>❌</span> <span>Unavailable</span>';
-                setTimeout(() => { btn.innerHTML = '<span>🔊</span> <span>Listen</span>'; }, 2000);
+                // Server returned error, use browser speech fallback
+                speakBrowserFallback(text, btn);
             }
         } catch(e) {
-            btn.innerHTML = '<span>🔊</span> <span>Listen</span>';
+            ttsAbortController = null;
+            if (e.name === 'AbortError') {
+                btn.innerHTML = '<span>🔊</span> <span>Listen</span>';
+                btn.dataset.playing = 'false';
+            } else {
+                speakBrowserFallback(text, btn);
+            }
         }
     };
+
+    // Browser speech synthesis fallback
+    function speakBrowserFallback(text, btn) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const clean = text.replace(/\*\*/g, '').replace(/\[.*?\]\(.*?\)/g, '').replace(/[^\p{L}\p{N}\p{P}\s]/gu, '');
+            const u = new SpeechSynthesisUtterance(clean);
+            u.rate = 0.95;
+            btn.innerHTML = '<span>⏹️</span> <span>Stop</span>';
+            u.onend = () => {
+                btn.innerHTML = '<span>🔊</span> <span>Listen</span>';
+                btn.dataset.playing = 'false';
+            };
+            u.onerror = () => {
+                btn.innerHTML = '<span>🔊</span> <span>Listen</span>';
+                btn.dataset.playing = 'false';
+            };
+            window.speechSynthesis.speak(u);
+        } else {
+            btn.innerHTML = '<span>❌</span> <span>Unavailable</span>';
+            btn.dataset.playing = 'false';
+            setTimeout(() => { btn.innerHTML = '<span>🔊</span> <span>Listen</span>'; }, 2000);
+        }
+    }
 
     // ===== MARKETING EMAIL SENDER =====
     window.sendMarketingEmail = async function() {
@@ -699,7 +812,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Basic email validation
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             showEmailStatus('❌ Please enter a valid email address.', 'text-red-400');
             return;
@@ -722,7 +834,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 showEmailStatus('✅ ' + (data.message || 'Email sent successfully!'), 'text-emerald-400');
                 emailInput.value = '';
-                // Also show in chat
                 appendBotMessage({ reply: `📧 **Email sent!** We've sent a ${emailType.value} email to **${email}**. Check your inbox!`, type: 'text' });
             } else {
                 showEmailStatus('❌ ' + (data.error || 'Failed to send email.'), 'text-red-400');
@@ -807,3 +918,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endsection
+

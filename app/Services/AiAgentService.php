@@ -197,7 +197,7 @@ class AiAgentService
                 'subject' => $subject,
                 'status' => 'failed'
             ]);
-            return ['success' => false, 'error' => 'Email service unavailable: Please check SMTP settings.'];
+            return ['success' => false, 'error' => 'Email failed: ' . $e->getMessage()];
         }
     }
 }
