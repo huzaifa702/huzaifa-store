@@ -165,46 +165,39 @@ class AiAgentService
     }
 
     /**
-     * Send marketing email via Resend — 1 per 24h per email.
+     * Send marketing email via SMTP (Brevo) — 1 per 24h per email.
      */
     public function sendMarketingEmail(string $email, string $subject, string $htmlBody, ?int $userId = null): array
     {
-        $apiKey = config('services.resend.key');
-        if (!$apiKey) return ['success' => false, 'error' => 'Email service not configured. Please add RESEND_API_KEY.'];
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) return ['success' => false, 'error' => 'Invalid email address.'];
         if (!EmailLog::canSendMarketing($email)) return ['success' => false, 'error' => 'Email already sent to this address in the last 24 hours. Try again later.'];
 
         try {
-            $response = Http::timeout(15)
-                ->withOptions(['verify' => false])
-                ->withHeaders(['Authorization' => 'Bearer ' . $apiKey, 'Content-Type' => 'application/json'])
-                ->post('https://api.resend.com/emails', [
-                    'from' => 'Huzaifa Store <onboarding@resend.dev>',
-                    'to' => [$email],
-                    'subject' => $subject,
-                    'html' => $htmlBody,
-                ]);
-
-            $responseData = $response->json();
+            \Illuminate\Support\Facades\Mail::html($htmlBody, function ($message) use ($email, $subject) {
+                $message->to($email)
+                        ->subject($subject);
+            });
 
             EmailLog::create([
-                'user_id' => $userId, 'email' => $email, 'type' => 'marketing',
-                'subject' => $subject, 'status' => $response->successful() ? 'sent' : 'failed',
-                'resend_id' => $responseData['id'] ?? null,
+                'user_id' => $userId,
+                'email' => $email,
+                'type' => 'marketing',
+                'subject' => $subject,
+                'status' => 'sent',
+                'resend_id' => null, // Not using Resend API anymore
             ]);
 
-            if ($response->successful()) {
-                return ['success' => true, 'message' => 'Email sent successfully!'];
-            }
-
-            // Return the actual error from Resend API
-            $apiError = $responseData['message'] ?? $responseData['error'] ?? 'Unknown error from email service';
-            Log::error('Resend API error', ['status' => $response->status(), 'response' => $responseData, 'email' => $email]);
-            return ['success' => false, 'error' => $apiError];
+            return ['success' => true, 'message' => 'Email sent successfully!'];
         } catch (\Exception $e) {
-            Log::error('Email send exception: ' . $e->getMessage());
-            EmailLog::create(['user_id' => $userId, 'email' => $email, 'type' => 'marketing', 'subject' => $subject, 'status' => 'failed']);
-            return ['success' => false, 'error' => 'Email service unavailable: ' . $e->getMessage()];
+            Log::error('SMTP Email Exception: ' . $e->getMessage());
+            EmailLog::create([
+                'user_id' => $userId,
+                'email' => $email,
+                'type' => 'marketing',
+                'subject' => $subject,
+                'status' => 'failed'
+            ]);
+            return ['success' => false, 'error' => 'Email service unavailable: Please check SMTP settings.'];
         }
     }
 }
