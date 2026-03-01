@@ -165,31 +165,62 @@ class AiAgentService
     }
 
     /**
-     * Send marketing email via SMTP (Brevo).
+     * Send marketing email via Brevo HTTP API (bypasses SMTP port blocking).
      */
     public function sendMarketingEmail(string $email, string $subject, string $htmlBody, ?int $userId = null): array
     {
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) return ['success' => false, 'error' => 'Invalid email address.'];
-        // Removed 24h limit to allow sending multiple emails to the same address
+
+        $apiKey = config('services.brevo.key');
+        if (!$apiKey) {
+            Log::error('Brevo API key not configured');
+            return ['success' => false, 'error' => 'Email service not configured.'];
+        }
 
         try {
-            \Illuminate\Support\Facades\Mail::html($htmlBody, function ($message) use ($email, $subject) {
-                $message->to($email)
-                        ->subject($subject);
-            });
+            $response = Http::timeout(15)
+                ->withOptions(['verify' => false])
+                ->withHeaders([
+                    'api-key' => $apiKey,
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                ])
+                ->post('https://api.brevo.com/v3/smtp/email', [
+                    'sender' => [
+                        'name' => config('mail.from.name', 'Huzaifa Store'),
+                        'email' => config('mail.from.address', 'hr1034072@gmail.com'),
+                    ],
+                    'to' => [
+                        ['email' => $email],
+                    ],
+                    'subject' => $subject,
+                    'htmlContent' => $htmlBody,
+                ]);
 
+            if ($response->successful()) {
+                EmailLog::create([
+                    'user_id' => $userId,
+                    'email' => $email,
+                    'type' => 'marketing',
+                    'subject' => $subject,
+                    'status' => 'sent',
+                    'resend_id' => $response->json('messageId'),
+                ]);
+                return ['success' => true, 'message' => 'Email sent successfully!'];
+            }
+
+            $errorMsg = $response->json('message') ?? $response->body();
+            Log::error('Brevo API error: ' . $errorMsg);
             EmailLog::create([
                 'user_id' => $userId,
                 'email' => $email,
                 'type' => 'marketing',
                 'subject' => $subject,
-                'status' => 'sent',
-                'resend_id' => null, // Not using Resend API anymore
+                'status' => 'failed'
             ]);
-
-            return ['success' => true, 'message' => 'Email sent successfully!'];
+            return ['success' => false, 'error' => 'Email failed: ' . $errorMsg];
         } catch (\Exception $e) {
-            Log::error('SMTP Email Exception: ' . $e->getMessage());
+            Log::error('Brevo API Exception: ' . $e->getMessage());
             EmailLog::create([
                 'user_id' => $userId,
                 'email' => $email,

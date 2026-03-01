@@ -42,4 +42,8 @@ return [
         'key' => env('ELEVENLABS_API_KEY'),
     ],
 
+    'brevo' => [
+        'key' => env('BREVO_API_KEY'),
+    ],
+
 ];
