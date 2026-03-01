@@ -408,8 +408,23 @@ class ChatbotController extends Controller
             return ['text' => "💳 **Payment Methods:**\n\n• Credit/Debit Cards (Visa, Mastercard)\n• Cash on Delivery (COD)\n• Bank Transfer\n• Easy Installments available\n\n🔒 All payments are secured with SSL encryption!", 'type' => 'text'];
         }
 
+        // Email sending via chat — detect "send deals/email to user@example.com"
+        if (preg_match('/(send|email|mail|subscribe).*?([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i', $message, $emailMatches)) {
+            $targetEmail = $emailMatches[2];
+            if (filter_var($targetEmail, FILTER_VALIDATE_EMAIL)) {
+                $userId = Auth::id();
+                $content = $this->buildEmailContent('deals');
+                $result = $this->ai->sendMarketingEmail($targetEmail, $content['subject'], $content['html'], $userId);
+                if ($result['success']) {
+                    return ['text' => "📧 **Email sent!** We've sent exclusive deals to **{$targetEmail}**. Check your inbox! 🎉\n\nWant more? You can also use the email panel below to choose different email types (Deals, Newsletter, Welcome).", 'type' => 'text'];
+                } else {
+                    return ['text' => "❌ Sorry, I couldn't send the email: **{$result['error']}**\n\nPlease try again later or use a different email address.", 'type' => 'text'];
+                }
+            }
+        }
+
         // Contact
-        if (preg_match('/(contact|support|email|phone|call|reach)/i', $message)) {
+        if (preg_match('/(contact|support|phone|call|reach)/i', $message)) {
             return ['text' => "📞 **Contact Us:**\n\n📧 Email: mhuzaifa2503a@aptechorangi.com\n🕐 Support Hours: Mon-Sat, 9AM-6PM\n💬 Or just ask me anything here!\n\nWe typically respond within 24 hours.", 'type' => 'text'];
         }
 

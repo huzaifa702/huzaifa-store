@@ -83,6 +83,9 @@
                         <span class="text-gray-400 hover:text-brand-400">📸</span>
                         <input type="file" id="imageUploadPage" accept="image/*" class="hidden">
                     </label>
+                    <button type="button" id="micBtn" onclick="toggleVoiceInput()" class="chatbot-mic-btn" title="Voice Input">
+                        <span id="micIcon">🎤</span>
+                    </button>
                     <div class="flex-1 relative">
                         <input type="text" id="chatInput" placeholder="Ask me anything about products..." class="chatbot-text-input" autocomplete="off">
                     </div>
@@ -305,6 +308,31 @@
     .chatbot-send-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px -5px rgba(99, 102, 241, 0.5); }
     .chatbot-send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
+    /* Mic button */
+    .chatbot-mic-btn {
+        width: 2.5rem; height: 2.5rem;
+        border-radius: 0.75rem;
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(51, 65, 85, 0.5);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        flex-shrink: 0;
+        font-size: 1rem;
+    }
+    .chatbot-mic-btn:hover {
+        border-color: rgba(99, 102, 241, 0.4);
+    }
+    .chatbot-mic-btn.recording {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: rgba(239, 68, 68, 0.5);
+        animation: micPulse 1.5s ease-in-out infinite;
+    }
+    @keyframes micPulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+    }
+
     /* Email Panel */
     .chatbot-email-panel {
         margin-top: 1rem;
@@ -428,7 +456,7 @@
         .chatbot-input-area { padding: 0.6rem 0.75rem; }
         .chatbot-input-form { gap: 0.5rem; }
         .chatbot-text-input { padding: 0.6rem 0.85rem; font-size: 16px; /* prevent iOS zoom */ border-radius: 0.75rem; }
-        .chatbot-upload-btn, .chatbot-send-btn { width: 2.25rem; height: 2.25rem; border-radius: 0.625rem; }
+        .chatbot-upload-btn, .chatbot-send-btn, .chatbot-mic-btn { width: 2.25rem; height: 2.25rem; border-radius: 0.625rem; }
         .chatbot-quick-actions { padding: 0.4rem 0.75rem; }
         .quick-action-btn { padding: 0.375rem 0.75rem; font-size: 0.68rem; }
         .chatbot-email-panel { padding: 0.75rem; border-radius: 1rem; margin-top: 0.75rem; }
@@ -714,6 +742,65 @@ document.addEventListener('DOMContentLoaded', function() {
         el.classList.remove('hidden');
         setTimeout(() => el.classList.add('hidden'), 5000);
     }
+
+    // ===== SPEECH-TO-TEXT (STT) =====
+    let sttRecognition = null;
+    let isRecording = false;
+
+    window.toggleVoiceInput = function() {
+        const micBtn = document.getElementById('micBtn');
+        const micIcon = document.getElementById('micIcon');
+
+        if (isRecording) {
+            if (sttRecognition) sttRecognition.stop();
+            isRecording = false;
+            micBtn.classList.remove('recording');
+            micIcon.textContent = '🎤';
+            chatInput.placeholder = 'Ask me anything about products...';
+            return;
+        }
+
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            appendBotMessage({ reply: '🎤 Voice input is not supported in this browser. Please use Chrome!', type: 'text' });
+            return;
+        }
+
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        sttRecognition = new SR();
+        sttRecognition.continuous = false;
+        sttRecognition.interimResults = false;
+        sttRecognition.lang = 'en-US';
+
+        sttRecognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            chatInput.value = transcript;
+            isRecording = false;
+            micBtn.classList.remove('recording');
+            micIcon.textContent = '🎤';
+            chatInput.placeholder = 'Ask me anything about products...';
+            sendTextMessage(transcript);
+        };
+
+        sttRecognition.onerror = function() {
+            isRecording = false;
+            micBtn.classList.remove('recording');
+            micIcon.textContent = '🎤';
+            chatInput.placeholder = 'Ask me anything about products...';
+        };
+
+        sttRecognition.onend = function() {
+            isRecording = false;
+            micBtn.classList.remove('recording');
+            micIcon.textContent = '🎤';
+            chatInput.placeholder = 'Ask me anything about products...';
+        };
+
+        sttRecognition.start();
+        isRecording = true;
+        micBtn.classList.add('recording');
+        micIcon.textContent = '⏹️';
+        chatInput.placeholder = '🎤 Listening... speak now!';
+    };
 
     // Focus input on load
     chatInput.focus();
