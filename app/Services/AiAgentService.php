@@ -170,12 +170,12 @@ class AiAgentService
     public function sendMarketingEmail(string $email, string $subject, string $htmlBody, ?int $userId = null): array
     {
         $apiKey = config('services.resend.key');
-        if (!$apiKey) return ['success' => false, 'error' => 'Email service not configured'];
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) return ['success' => false, 'error' => 'Invalid email'];
-        if (!EmailLog::canSendMarketing($email)) return ['success' => false, 'error' => 'Already sent in last 24h'];
+        if (!$apiKey) return ['success' => false, 'error' => 'Email service not configured. Please add RESEND_API_KEY.'];
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) return ['success' => false, 'error' => 'Invalid email address.'];
+        if (!EmailLog::canSendMarketing($email)) return ['success' => false, 'error' => 'Email already sent to this address in the last 24 hours. Try again later.'];
 
         try {
-            $response = Http::timeout(10)
+            $response = Http::timeout(15)
                 ->withOptions(['verify' => false])
                 ->withHeaders(['Authorization' => 'Bearer ' . $apiKey, 'Content-Type' => 'application/json'])
                 ->post('https://api.resend.com/emails', [
@@ -185,18 +185,26 @@ class AiAgentService
                     'html' => $htmlBody,
                 ]);
 
+            $responseData = $response->json();
+
             EmailLog::create([
                 'user_id' => $userId, 'email' => $email, 'type' => 'marketing',
                 'subject' => $subject, 'status' => $response->successful() ? 'sent' : 'failed',
-                'resend_id' => $response->json()['id'] ?? null,
+                'resend_id' => $responseData['id'] ?? null,
             ]);
 
-            return $response->successful()
-                ? ['success' => true, 'message' => 'Email sent!']
-                : ['success' => false, 'error' => 'Failed to send'];
+            if ($response->successful()) {
+                return ['success' => true, 'message' => 'Email sent successfully!'];
+            }
+
+            // Return the actual error from Resend API
+            $apiError = $responseData['message'] ?? $responseData['error'] ?? 'Unknown error from email service';
+            Log::error('Resend API error', ['status' => $response->status(), 'response' => $responseData, 'email' => $email]);
+            return ['success' => false, 'error' => $apiError];
         } catch (\Exception $e) {
+            Log::error('Email send exception: ' . $e->getMessage());
             EmailLog::create(['user_id' => $userId, 'email' => $email, 'type' => 'marketing', 'subject' => $subject, 'status' => 'failed']);
-            return ['success' => false, 'error' => 'Email service unavailable'];
+            return ['success' => false, 'error' => 'Email service unavailable: ' . $e->getMessage()];
         }
     }
 }
