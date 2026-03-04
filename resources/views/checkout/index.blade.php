@@ -7,9 +7,9 @@
 
     <form action="{{ route('checkout.process') }}" method="POST">
         @csrf
-        <div class="grid lg:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <!-- Shipping Info -->
-            <div class="lg:col-span-2 space-y-6 animate-on-scroll">
+            <div class="md:col-span-2 space-y-6 animate-on-scroll">
                 <div class="bg-dark-900 rounded-2xl shadow-black/20 p-6">
                     <h3 class="font-bold text-lg mb-4 flex items-center gap-2">📦 Shipping Information</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -73,7 +73,7 @@
             </div>
 
             <!-- Order Summary -->
-            <div class="lg:col-span-1">
+            <div class="md:col-span-1">
                 <div class="bg-dark-900 rounded-2xl shadow-black/20 p-6 sticky top-24 animate-on-scroll">
                     <h3 class="font-bold text-lg mb-4">Order Summary</h3>
                     <div class="space-y-3 mb-4">

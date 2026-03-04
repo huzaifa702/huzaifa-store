@@ -10,10 +10,10 @@
         <!-- Cart Items -->
         <div class="lg:col-span-2 space-y-4">
             @foreach($cart->items as $item)
-            <div class="bg-dark-900 rounded-2xl shadow-black/20 p-4 flex gap-4 items-center animate-on-scroll card-3d">
+            <div class="bg-dark-900 rounded-2xl shadow-black/20 p-4 flex flex-col sm:flex-row gap-4 sm:items-center animate-on-scroll card-3d">
                 <!-- Product Image -->
                 <a href="{{ route('products.show', $item->product) }}" class="flex-shrink-0">
-                    <div class="w-24 h-24 rounded-xl overflow-hidden bg-dark-800">
+                    <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden bg-dark-800">
                         @if($item->product->primary_image_url)
                             <img src="{{ $item->product->primary_image_url }}" alt="{{ $item->product->name }}" class="w-full h-full object-cover" loading="lazy">
                         @else
@@ -30,28 +30,28 @@
                     <p class="font-bold text-brand-600 mt-1">${{ number_format($item->product->display_price, 2) }}</p>
                 </div>
 
-                <!-- Quantity -->
-                <form action="{{ route('cart.update', $item) }}" method="POST" class="flex items-center gap-2">
-                    @csrf @method('PATCH')
-                    <select name="quantity" onchange="this.form.submit()" class="px-3 py-2 bg-dark-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400">
-                        @for($i=1; $i<=min(10, $item->product->stock); $i++)
-                            <option value="{{ $i }}" {{ $item->quantity == $i ? 'selected' : '' }}>{{ $i }}</option>
-                        @endfor
-                    </select>
-                </form>
+                <!-- Quantity + Subtotal + Remove (row on mobile) -->
+                <div class="flex items-center gap-3 sm:gap-4 justify-between sm:justify-end">
+                    <form action="{{ route('cart.update', $item) }}" method="POST" class="flex items-center">
+                        @csrf @method('PATCH')
+                        <select name="quantity" onchange="this.form.submit()" class="px-3 py-2 bg-dark-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400">
+                            @for($i=1; $i<=min(10, $item->product->stock); $i++)
+                                <option value="{{ $i }}" {{ $item->quantity == $i ? 'selected' : '' }}>{{ $i }}</option>
+                            @endfor
+                        </select>
+                    </form>
 
-                <!-- Subtotal -->
-                <div class="text-right">
-                    <p class="font-bold text-gray-100">${{ number_format($item->subtotal, 2) }}</p>
+                    <div class="text-right">
+                        <p class="font-bold text-gray-100">${{ number_format($item->subtotal, 2) }}</p>
+                    </div>
+
+                    <form action="{{ route('cart.remove', $item) }}" method="POST">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="p-2 text-gray-400 hover:text-red-500 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </form>
                 </div>
-
-                <!-- Remove -->
-                <form action="{{ route('cart.remove', $item) }}" method="POST">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="p-2 text-gray-400 hover:text-red-500 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                    </button>
-                </form>
             </div>
             @endforeach
         </div>

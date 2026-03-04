@@ -73,6 +73,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
     <style>
+        /* Hide Alpine.js elements until initialized — prevents chatbot flash on page load */
+        [x-cloak] { display: none !important; }
+
         * {
             font-family: 'Inter', system-ui, sans-serif;
             box-sizing: border-box;
