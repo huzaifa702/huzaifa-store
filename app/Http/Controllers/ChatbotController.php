@@ -83,14 +83,23 @@ class ChatbotController extends Controller
      */
     public function imageSearch(Request $request)
     {
-        $request->validate(['image' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120']);
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'message' => 'nullable|string|max:1000', // Added validation for message
+        ]);
 
         $file = $request->file('image');
         $path = $file->store('chatbot-uploads', 'public');
         $fullPath = storage_path('app/public/' . $path);
 
+        // Use user's text as prompt if provided, otherwise default
+        $userMessage = $request->input('message', '');
+        $prompt = $userMessage
+            ? "The user uploaded this image and asks: \"{$userMessage}\". Analyze the image and answer their question. If relevant, mention product categories from our store. Be concise (under 150 words)."
+            : "Analyze this image. If it shows a product, identify its category and features. Be concise (under 100 words).";
+
         // Try AI-powered image analysis
-        $analysis = $this->ai->analyzeImage($fullPath);
+        $analysis = $this->ai->analyzeImage($fullPath, $prompt);
 
         if ($analysis) {
             // Use AI analysis to search for matching products
