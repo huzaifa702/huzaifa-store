@@ -13,8 +13,12 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        $categories = Category::withCount('products')->orderBy('sort_order')->paginate(15);
-        return view('admin.categories.index', compact('categories'));
+        try {
+            $categories = Category::withCount('products')->orderBy('sort_order')->paginate(15);
+            return view('admin.categories.index', compact('categories'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to load categories: ' . $e->getMessage());
+        }
     }
 
     public function create()
@@ -32,23 +36,31 @@ class CategoryController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
-        $data = [
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'description' => $request->description,
-            'is_active' => $request->boolean('is_active', true),
-            'sort_order' => $request->input('sort_order', 0),
-        ];
+        try {
+            $data = [
+                'name' => $request->name,
+                'slug' => Str::slug($request->name),
+                'description' => $request->description,
+                'is_active' => $request->boolean('is_active', true),
+                'sort_order' => $request->input('sort_order', 0),
+            ];
 
-        if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('categories', 'public');
+            if ($request->hasFile('image')) {
+                $data['image'] = $request->file('image')->store('categories', 'public');
+            }
+
+            $category = Category::create($data);
+
+            try {
+                ActivityLogService::log('category_created', "Category '{$category->name}' created", null, $category);
+            } catch (\Exception $e) {
+                // Ignore activity log errors — table might not exist
+            }
+
+            return redirect()->route('admin.categories.index')->with('success', 'Category created successfully!');
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Failed to create category: ' . $e->getMessage());
         }
-
-        $category = Category::create($data);
-
-        ActivityLogService::log('category_created', "Category '{$category->name}' created", null, $category);
-
-        return redirect()->route('admin.categories.index')->with('success', 'Category created successfully!');
     }
 
     public function edit(Category $category)
@@ -66,62 +78,72 @@ class CategoryController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
-        $data = [
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'description' => $request->description,
-            'is_active' => $request->boolean('is_active', true),
-            'sort_order' => $request->input('sort_order', 0),
-        ];
+        try {
+            $data = [
+                'name' => $request->name,
+                'slug' => Str::slug($request->name),
+                'description' => $request->description,
+                'is_active' => $request->boolean('is_active', true),
+                'sort_order' => $request->input('sort_order', 0),
+            ];
 
-        // Handle image update: delete old, save new
-        if ($request->hasFile('image')) {
-            // Delete old image from storage if it exists
-            if ($category->image && Storage::disk('public')->exists($category->image)) {
-                Storage::disk('public')->delete($category->image);
+            // Handle image update
+            if ($request->hasFile('image')) {
+                try {
+                    if ($category->image && Storage::disk('public')->exists($category->image)) {
+                        Storage::disk('public')->delete($category->image);
+                    }
+                } catch (\Exception $e) { /* ignore */ }
+                $data['image'] = $request->file('image')->store('categories', 'public');
             }
-            $data['image'] = $request->file('image')->store('categories', 'public');
-        }
 
-        // Handle explicit image removal (checkbox "remove image")
-        if ($request->boolean('remove_image') && !$request->hasFile('image')) {
-            if ($category->image && Storage::disk('public')->exists($category->image)) {
-                Storage::disk('public')->delete($category->image);
+            // Handle explicit image removal
+            if ($request->boolean('remove_image') && !$request->hasFile('image')) {
+                try {
+                    if ($category->image && Storage::disk('public')->exists($category->image)) {
+                        Storage::disk('public')->delete($category->image);
+                    }
+                } catch (\Exception $e) { /* ignore */ }
+                $data['image'] = null;
             }
-            $data['image'] = null;
+
+            $category->update($data);
+
+            try {
+                ActivityLogService::log('category_updated', "Category '{$category->name}' updated", null, $category);
+            } catch (\Exception $e) {
+                // Ignore activity log errors
+            }
+
+            return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully!');
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Failed to update category: ' . $e->getMessage());
         }
-
-        $category->update($data);
-
-        ActivityLogService::log('category_updated', "Category '{$category->name}' updated", null, $category);
-
-        return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully!');
     }
 
     public function destroy(Category $category)
     {
         try {
-            // Soft-delete all products in this category first
-            $productCount = $category->products()->count();
-            if ($productCount > 0) {
-                $category->products()->delete(); // Soft delete all products
-            }
+            // Soft-delete all products in this category
+            $productCount = 0;
+            try {
+                $productCount = $category->products()->count();
+                if ($productCount > 0) {
+                    $category->products()->delete();
+                }
+            } catch (\Exception $e) { /* ignore */ }
 
             // Delete category image from storage
             try {
                 if ($category->image && Storage::disk('public')->exists($category->image)) {
                     Storage::disk('public')->delete($category->image);
                 }
-            } catch (\Exception $e) {
-                // Ignore storage errors
-            }
+            } catch (\Exception $e) { /* ignore */ }
 
             // Log activity
             try {
                 ActivityLogService::log('category_deleted', "Category '{$category->name}' deleted ({$productCount} products removed)", null, $category);
-            } catch (\Exception $e) {
-                // Ignore
-            }
+            } catch (\Exception $e) { /* ignore */ }
 
             $category->delete();
 

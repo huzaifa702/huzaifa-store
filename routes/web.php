@@ -81,6 +81,86 @@ Route::get('/setup-database/{key}', function ($key) {
     return '<pre style="background:#1e293b;color:#e2e8f0;padding:2rem;font-family:monospace;font-size:14px;line-height:1.8;">' . implode("\n", $results) . '</pre>';
 });
 
+// Debug diagnostic — shows actual error messages (protected by secret)
+Route::get('/debug-admin/{key}', function ($key) {
+    if ($key !== 'huzaifa2026secret') abort(404);
+
+    $results = [];
+
+    // Test 1: Can we query categories?
+    try {
+        $cats = \App\Models\Category::withCount('products')->orderBy('sort_order')->get();
+        $results[] = '✅ Categories query OK — ' . $cats->count() . ' categories';
+    } catch (\Exception $e) {
+        $results[] = '❌ Categories FAIL: ' . $e->getMessage();
+    }
+
+    // Test 2: Can we render the categories view?
+    try {
+        $categories = \App\Models\Category::withCount('products')->orderBy('sort_order')->paginate(15);
+        $html = view('admin.categories.index', compact('categories'))->render();
+        $results[] = '✅ Categories view renders OK (' . strlen($html) . ' bytes)';
+    } catch (\Exception $e) {
+        $results[] = '❌ Categories VIEW FAIL: ' . $e->getMessage() . ' — File: ' . $e->getFile() . ':' . $e->getLine();
+    }
+
+    // Test 3: Can we render the category create view?
+    try {
+        $html = view('admin.categories.create')->render();
+        $results[] = '✅ Category create view renders OK';
+    } catch (\Exception $e) {
+        $results[] = '❌ Category create VIEW FAIL: ' . $e->getMessage() . ' — File: ' . $e->getFile() . ':' . $e->getLine();
+    }
+
+    // Test 4: Activity log table exists?
+    try {
+        $count = \App\Models\ActivityLog::count();
+        $results[] = '✅ activity_logs table OK — ' . $count . ' entries';
+    } catch (\Exception $e) {
+        $results[] = '❌ activity_logs FAIL: ' . $e->getMessage();
+    }
+
+    // Test 5: Dashboard
+    try {
+        $totalProducts = \App\Models\Product::count();
+        $totalCategories = \App\Models\Category::count();
+        $results[] = '✅ Dashboard queries OK — ' . $totalProducts . ' products, ' . $totalCategories . ' categories';
+    } catch (\Exception $e) {
+        $results[] = '❌ Dashboard FAIL: ' . $e->getMessage();
+    }
+
+    // Test 6: Admin layout view
+    try {
+        $categories = \App\Models\Category::withCount('products')->orderBy('sort_order')->paginate(15);
+        $html = view('admin.layouts.app', ['__env' => app(\Illuminate\View\Factory::class)])->render();
+        $results[] = '✅ Admin layout renders OK';
+    } catch (\Exception $e) {
+        $results[] = '❌ Admin layout FAIL: ' . $e->getMessage() . ' — File: ' . $e->getFile() . ':' . $e->getLine();
+    }
+
+    // Test 7: Check if sessions work
+    try {
+        session(['test_key' => 'test_value']);
+        $val = session('test_key');
+        $results[] = '✅ Sessions OK — test value: ' . $val;
+    } catch (\Exception $e) {
+        $results[] = '❌ Sessions FAIL: ' . $e->getMessage();
+    }
+
+    // Test 8: Check all migration tables exist
+    $tables = ['admins', 'users', 'categories', 'products', 'product_images', 'orders', 'order_items', 'activity_logs', 'reviews', 'wishlists'];
+    foreach ($tables as $table) {
+        try {
+            $exists = \Illuminate\Support\Facades\Schema::hasTable($table);
+            $results[] = ($exists ? '✅' : '❌') . " Table '$table': " . ($exists ? 'EXISTS' : 'MISSING');
+        } catch (\Exception $e) {
+            $results[] = "❌ Table check '$table' FAIL: " . $e->getMessage();
+        }
+    }
+
+    return '<pre style="background:#1e293b;color:#e2e8f0;padding:2rem;font-family:monospace;font-size:14px;line-height:1.8;">' . implode("\n", $results) . '</pre>';
+});
+
 // Homepage
 Route::get('/', [HomeController::class, 'index'])->name('home');
 

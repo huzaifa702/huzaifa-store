@@ -85,7 +85,7 @@ class ProductController extends Controller
             }
         }
 
-        ActivityLogService::log('product_created', "Product '{$product->name}' created", null, $product);
+        try { ActivityLogService::log('product_created', "Product '{$product->name}' created", null, $product); } catch (\Exception $e) { /* ignore */ }
 
         return redirect()->route('admin.products.index')->with('success', 'Product created successfully!');
     }
@@ -167,7 +167,7 @@ class ProductController extends Controller
             }
         }
 
-        ActivityLogService::log('product_updated', "Product '{$product->name}' updated", null, $product, $oldValues, $product->toArray());
+        try { ActivityLogService::log('product_updated', "Product '{$product->name}' updated", null, $product, $oldValues, $product->toArray()); } catch (\Exception $e) { /* ignore */ }
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated successfully!');
     }
@@ -223,7 +223,7 @@ class ProductController extends Controller
         $product->update(['is_active' => !$product->is_active]);
 
         $status = $product->is_active ? 'activated' : 'deactivated';
-        ActivityLogService::log("product_{$status}", "Product '{$product->name}' {$status}", null, $product);
+        try { ActivityLogService::log("product_{$status}", "Product '{$product->name}' {$status}", null, $product); } catch (\Exception $e) { /* ignore */ }
 
         return back()->with('success', "Product {$status} successfully!");
     }

@@ -71,8 +71,8 @@
                             <button @click="speakTTS(msg.text, i)"
                                 class="text-xs text-gray-500 hover:text-brand-400 transition flex items-center gap-1"
                                 title="Read aloud">
-                                <span x-text="playingIndex === i ? '⏹️' : '🔊'"></span>
-                                <span class="text-[10px]" x-text="playingIndex === i ? 'Stop' : 'Listen'"></span>
+                                <span x-text="playingIndex === i ? '⏸' : '🔊'"></span>
+                                <span class="text-[10px]" x-text="playingIndex === i ? 'Pause Audio' : 'Listen'"></span>
                             </button>
                             <span x-show="msg.source === 'ai'" class="text-[10px] text-neon-cyan/60 font-mono">AI</span>
                         </div>
@@ -95,6 +95,13 @@
                         <span class="text-[10px] text-gray-600 ml-2">AI is thinking...</span>
                     </div>
                 </div>
+            </div>
+            <!-- BIG STOP BUTTON visible during generation -->
+            <div x-show="isTyping" x-transition class="px-4 pb-2">
+                <button @click="stopGeneration()" class="w-full flex items-center justify-center gap-2 py-2.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-xl transition-all border border-red-500/30">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+                    <span class="text-sm font-semibold">Stop Generating</span>
+                </button>
             </div>
         </div>
 
@@ -165,14 +172,6 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                    </svg>
-                </button>
-                <!-- Stop Button (visible during generation) -->
-                <button x-show="isTyping" @click="stopGeneration()"
-                    class="p-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-xl transition-all animate-pulse"
-                    title="Stop generating">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <rect x="6" y="6" width="12" height="12" rx="2" />
                     </svg>
                 </button>
                 <!-- Text Input -->

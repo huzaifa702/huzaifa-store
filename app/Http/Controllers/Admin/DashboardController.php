@@ -40,24 +40,36 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        $recentActivities = ActivityLog::latest()->take(10)->get();
+        try {
+            $recentActivities = ActivityLog::latest()->take(10)->get();
+        } catch (\Exception $e) {
+            $recentActivities = collect();
+        }
 
         $monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        $monthlySales = Order::where('status', '!=', 'cancelled')
-            ->selectRaw("MONTH(created_at) as month_num, SUM(total) as revenue, COUNT(*) as orders")
-            ->groupByRaw("MONTH(created_at)")
-            ->orderByRaw("MONTH(created_at)")
-            ->get()
-            ->map(function ($item) use ($monthNames) {
-                $item->month = $monthNames[intval($item->month_num) - 1] ?? $item->month_num;
-                return $item;
-            });
+        try {
+            $monthlySales = Order::where('status', '!=', 'cancelled')
+                ->selectRaw("MONTH(created_at) as month_num, SUM(total) as revenue, COUNT(*) as orders")
+                ->groupByRaw("MONTH(created_at)")
+                ->orderByRaw("MONTH(created_at)")
+                ->get()
+                ->map(function ($item) use ($monthNames) {
+                    $item->month = $monthNames[intval($item->month_num) - 1] ?? $item->month_num;
+                    return $item;
+                });
+        } catch (\Exception $e) {
+            $monthlySales = collect();
+        }
 
         // Category product distribution
-        $categoryDistribution = Category::where('is_active', true)
-            ->withCount('activeProducts')
-            ->get()
-            ->map(fn($c) => ['name' => $c->name, 'count' => $c->active_products_count]);
+        try {
+            $categoryDistribution = Category::where('is_active', true)
+                ->withCount('activeProducts')
+                ->get()
+                ->map(fn($c) => ['name' => $c->name, 'count' => $c->active_products_count]);
+        } catch (\Exception $e) {
+            $categoryDistribution = collect();
+        }
 
         return view('admin.dashboard', compact(
             'totalRevenue',
