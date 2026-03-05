@@ -38,7 +38,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        // Create Categories
+        // Create Categories — restore soft-deleted ones first
         $categories = [
             ['name' => 'Electronics', 'slug' => 'electronics', 'description' => 'Latest electronic gadgets and devices', 'sort_order' => 1],
             ['name' => 'Fashion', 'slug' => 'fashion', 'description' => 'Trendy clothing and accessories', 'sort_order' => 2],
@@ -48,8 +48,20 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Beauty', 'slug' => 'beauty', 'description' => 'Skincare, makeup and beauty products', 'sort_order' => 6],
         ];
 
+        $categoryIds = []; // slug => id mapping
         foreach ($categories as $cat) {
-            Category::firstOrCreate(['slug' => $cat['slug']], $cat);
+            // Restore if soft-deleted, otherwise create
+            $existing = Category::withTrashed()->where('slug', $cat['slug'])->first();
+            if ($existing) {
+                if ($existing->trashed()) {
+                    $existing->restore();
+                }
+                $existing->update(['is_active' => true]);
+                $categoryIds[$cat['slug']] = $existing->id;
+            } else {
+                $newCat = Category::create(array_merge($cat, ['is_active' => true]));
+                $categoryIds[$cat['slug']] = $newCat->id;
+            }
         }
 
         // Create Products — 6+ per category = 36+ total
@@ -257,8 +269,28 @@ class DatabaseSeeder extends Seeder
             160, 161, 162, 163, 164, 165, 166, 167, 168,
         ];
 
+        // Map old hardcoded category_ids to actual database IDs
+        $catSlugs = ['electronics', 'fashion', 'home-living', 'sports', 'books', 'beauty'];
+        $catIdMap = [];
+        for ($i = 1; $i <= 6; $i++) {
+            $catIdMap[$i] = $categoryIds[$catSlugs[$i - 1]] ?? $i;
+        }
+
         foreach ($products as $index => $productData) {
-            $product = Product::firstOrCreate(['slug' => $productData['slug']], $productData);
+            // Remap the hardcoded category_id to the actual DB id
+            $productData['category_id'] = $catIdMap[$productData['category_id']] ?? $productData['category_id'];
+
+            // Restore soft-deleted product if exists
+            $existing = Product::withTrashed()->where('slug', $productData['slug'])->first();
+            if ($existing) {
+                if ($existing->trashed()) {
+                    $existing->restore();
+                }
+                $existing->update(['is_active' => true, 'category_id' => $productData['category_id']]);
+                $product = $existing;
+            } else {
+                $product = Product::create(array_merge($productData, ['is_active' => true]));
+            }
 
             $seed = $imageSeeds[$index] ?? ($index + 200);
             ProductImage::firstOrCreate(
