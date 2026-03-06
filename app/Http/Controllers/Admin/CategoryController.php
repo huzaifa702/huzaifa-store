@@ -37,9 +37,18 @@ class CategoryController extends Controller
         ]);
 
         try {
+            $slug = Str::slug($request->name);
+
+            // If a soft-deleted category with the same slug exists, force-delete it
+            // This prevents "Duplicate entry" errors when re-creating a previously deleted category
+            $trashedCategory = Category::onlyTrashed()->where('slug', $slug)->first();
+            if ($trashedCategory) {
+                $trashedCategory->forceDelete();
+            }
+
             $data = [
                 'name' => $request->name,
-                'slug' => Str::slug($request->name),
+                'slug' => $slug,
                 'description' => $request->description,
                 'is_active' => $request->boolean('is_active', true),
                 'sort_order' => $request->input('sort_order', 0),
@@ -79,9 +88,17 @@ class CategoryController extends Controller
         ]);
 
         try {
+            $slug = Str::slug($request->name);
+
+            // If a different soft-deleted category has the same slug, force-delete it
+            $trashedCategory = Category::onlyTrashed()->where('slug', $slug)->first();
+            if ($trashedCategory) {
+                $trashedCategory->forceDelete();
+            }
+
             $data = [
                 'name' => $request->name,
-                'slug' => Str::slug($request->name),
+                'slug' => $slug,
                 'description' => $request->description,
                 'is_active' => $request->boolean('is_active', true),
                 'sort_order' => $request->input('sort_order', 0),

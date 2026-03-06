@@ -6,7 +6,7 @@
     <h1 class="text-3xl font-bold mb-8 animate-on-scroll">Shopping Cart</h1>
 
     @if($cart && $cart->items->count() > 0)
-    <div class="grid lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
         <!-- Cart Items -->
         <div class="lg:col-span-2 space-y-4">
             @foreach($cart->items as $item)
@@ -30,8 +30,8 @@
                     <p class="font-bold text-brand-600 mt-1">${{ number_format($item->product->display_price, 2) }}</p>
                 </div>
 
-                <!-- Quantity + Subtotal + Remove (row on mobile) -->
-                <div class="flex items-center gap-3 sm:gap-4 justify-between sm:justify-end">
+                <!-- Quantity + Subtotal + Remove -->
+                <div class="flex items-center gap-3 sm:gap-4 justify-between sm:justify-end flex-wrap">
                     <form action="{{ route('cart.update', $item) }}" method="POST" class="flex items-center">
                         @csrf @method('PATCH')
                         <select name="quantity" onchange="this.form.submit()" class="px-3 py-2 bg-dark-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-400">
@@ -58,7 +58,7 @@
 
         <!-- Order Summary -->
         <div class="lg:col-span-1">
-            <div class="bg-dark-900 rounded-2xl shadow-black/20 p-6 sticky top-24 animate-on-scroll">
+            <div class="bg-dark-900 rounded-2xl shadow-black/20 p-6 lg:sticky lg:top-24 animate-on-scroll">
                 <h3 class="font-bold text-lg mb-4">Order Summary</h3>
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between"><span class="text-gray-500">Subtotal ({{ $cart->items->sum('quantity') }} items)</span><span class="font-semibold">${{ number_format($cart->total, 2) }}</span></div>

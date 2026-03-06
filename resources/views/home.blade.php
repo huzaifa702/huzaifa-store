@@ -109,8 +109,8 @@
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6" x-data="{ shown: false }" x-intersect.once="shown = true">
                 @php
                     $stats = [
-                        ['icon' => '📦', 'value' => '116', 'label' => 'Products', 'suffix' => '+', 'color' => 'from-brand-400 to-neon-cyan'],
-                        ['icon' => '🏷️', 'value' => '6', 'label' => 'Categories', 'suffix' => '', 'color' => 'from-neon-purple to-neon-pink'],
+                        ['icon' => '📦', 'value' => $productCount, 'label' => 'Products', 'suffix' => '+', 'color' => 'from-brand-400 to-neon-cyan'],
+                        ['icon' => '🏷️', 'value' => $categoryCount, 'label' => 'Categories', 'suffix' => '', 'color' => 'from-neon-purple to-neon-pink'],
                         ['icon' => '⭐', 'value' => '4.8', 'label' => 'Avg Rating', 'suffix' => '', 'color' => 'from-yellow-400 to-orange-500'],
                         ['icon' => '🚚', 'value' => '24', 'label' => 'Hour Delivery', 'suffix' => 'h', 'color' => 'from-emerald-400 to-teal-500'],
                     ];
@@ -141,23 +141,25 @@
                     class="inline-block px-4 py-1 bg-brand-500/10 rounded-full text-brand-400 text-sm font-semibold border border-brand-500/20 mb-4">Browse
                     Categories</span>
                 <h2 class="text-3xl md:text-5xl font-black gradient-text-shimmer">Shop by Category</h2>
-                <p class="text-gray-400 mt-3 max-w-lg mx-auto">Explore our curated collections across 6 premium categories
+                <p class="text-gray-400 mt-3 max-w-lg mx-auto">Explore our curated collections across {{ $categoryCount }} premium categories
                 </p>
             </div>
 
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 stagger-children">
                 @php
-                    $categoryColors = [
-                        'Electronics' => ['from-blue-500/20 to-indigo-600/20', 'hover:border-blue-500/40', 'from-blue-500 to-indigo-600'],
-                        'Fashion' => ['from-pink-500/20 to-rose-600/20', 'hover:border-pink-500/40', 'from-pink-500 to-rose-600'],
-                        'Home & Living' => ['from-amber-500/20 to-orange-600/20', 'hover:border-amber-500/40', 'from-amber-500 to-orange-600'],
-                        'Sports' => ['from-emerald-500/20 to-green-600/20', 'hover:border-emerald-500/40', 'from-emerald-500 to-green-600'],
-                        'Books' => ['from-violet-500/20 to-purple-600/20', 'hover:border-violet-500/40', 'from-violet-500 to-purple-600'],
-                        'Beauty' => ['from-rose-500/20 to-pink-600/20', 'hover:border-rose-500/40', 'from-rose-500 to-pink-600'],
+                    $dynamicColorPalette = [
+                        ['from-blue-500/20 to-indigo-600/20', 'hover:border-blue-500/40', 'from-blue-500 to-indigo-600'],
+                        ['from-pink-500/20 to-rose-600/20', 'hover:border-pink-500/40', 'from-pink-500 to-rose-600'],
+                        ['from-amber-500/20 to-orange-600/20', 'hover:border-amber-500/40', 'from-amber-500 to-orange-600'],
+                        ['from-emerald-500/20 to-green-600/20', 'hover:border-emerald-500/40', 'from-emerald-500 to-green-600'],
+                        ['from-violet-500/20 to-purple-600/20', 'hover:border-violet-500/40', 'from-violet-500 to-purple-600'],
+                        ['from-rose-500/20 to-pink-600/20', 'hover:border-rose-500/40', 'from-rose-500 to-pink-600'],
+                        ['from-cyan-500/20 to-teal-600/20', 'hover:border-cyan-500/40', 'from-cyan-500 to-teal-600'],
+                        ['from-red-500/20 to-orange-600/20', 'hover:border-red-500/40', 'from-red-500 to-orange-600'],
                     ];
                 @endphp
                 @foreach($categories as $category)
-                    @php $colors = $categoryColors[$category->name] ?? ['from-gray-500/20 to-slate-600/20', 'hover:border-gray-500/40', 'from-gray-500 to-slate-600']; @endphp
+                    @php $colors = $dynamicColorPalette[$loop->index % count($dynamicColorPalette)]; @endphp
                     <a href="{{ route('categories.show', $category) }}"
                         class="group glass-card rounded-2xl p-6 text-center transition-all duration-500 border border-white/5 {{ $colors[1] }} animate-slide-up">
                         <div

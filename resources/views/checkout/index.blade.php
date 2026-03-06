@@ -7,12 +7,12 @@
 
     <form action="{{ route('checkout.process') }}" method="POST">
         @csrf
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             <!-- Shipping Info -->
-            <div class="md:col-span-2 space-y-6 animate-on-scroll">
-                <div class="bg-dark-900 rounded-2xl shadow-black/20 p-6">
+            <div class="lg:col-span-2 space-y-6 animate-on-scroll">
+                <div class="bg-dark-900 rounded-2xl shadow-black/20 p-4 sm:p-6">
                     <h3 class="font-bold text-lg mb-4 flex items-center gap-2">📦 Shipping Information</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-300 mb-1">Full Name *</label>
                             <input type="text" name="shipping_name" value="{{ old('shipping_name', $user->name) }}" required class="w-full px-4 py-3 bg-dark-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm">
@@ -29,7 +29,7 @@
                             <label class="block text-sm font-medium text-gray-300 mb-1">City *</label>
                             <input type="text" name="shipping_city" value="{{ old('shipping_city', $user->city) }}" required class="w-full px-4 py-3 bg-dark-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm">
                         </div>
-                        <div class="md:col-span-2">
+                        <div class="sm:col-span-2">
                             <label class="block text-sm font-medium text-gray-300 mb-1">Address *</label>
                             <textarea name="shipping_address" rows="2" required class="w-full px-4 py-3 bg-dark-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm">{{ old('shipping_address', $user->address) }}</textarea>
                         </div>
@@ -45,20 +45,20 @@
                 </div>
 
                 <!-- Payment -->
-                <div class="bg-dark-900 rounded-2xl shadow-black/20 p-6">
+                <div class="bg-dark-900 rounded-2xl shadow-black/20 p-4 sm:p-6">
                     <h3 class="font-bold text-lg mb-4 flex items-center gap-2">💳 Payment Method</h3>
                     <div class="space-y-3" x-data="{ method: 'cod' }">
-                        <label class="flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all" :class="method === 'cod' ? 'bg-brand-50 border-2 border-brand-500' : 'bg-dark-800/50 border-2 border-transparent hover:bg-dark-800'">
-                            <input type="radio" name="payment_method" value="cod" x-model="method" class="text-brand-500 focus:ring-brand-500">
-                            <div>
-                                <p class="font-semibold">Cash on Delivery</p>
+                        <label class="flex items-center gap-3 p-3 sm:p-4 rounded-xl cursor-pointer transition-all" :class="method === 'cod' ? 'bg-brand-50 border-2 border-brand-500' : 'bg-dark-800/50 border-2 border-transparent hover:bg-dark-800'">
+                            <input type="radio" name="payment_method" value="cod" x-model="method" class="text-brand-500 focus:ring-brand-500 flex-shrink-0">
+                            <div class="min-w-0">
+                                <p class="font-semibold text-sm sm:text-base">Cash on Delivery</p>
                                 <p class="text-xs text-gray-500">Pay when you receive your order</p>
                             </div>
                         </label>
-                        <label class="flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all" :class="method === 'bank_transfer' ? 'bg-brand-50 border-2 border-brand-500' : 'bg-dark-800/50 border-2 border-transparent hover:bg-dark-800'">
-                            <input type="radio" name="payment_method" value="bank_transfer" x-model="method" class="text-brand-500 focus:ring-brand-500">
-                            <div>
-                                <p class="font-semibold">Bank Transfer</p>
+                        <label class="flex items-center gap-3 p-3 sm:p-4 rounded-xl cursor-pointer transition-all" :class="method === 'bank_transfer' ? 'bg-brand-50 border-2 border-brand-500' : 'bg-dark-800/50 border-2 border-transparent hover:bg-dark-800'">
+                            <input type="radio" name="payment_method" value="bank_transfer" x-model="method" class="text-brand-500 focus:ring-brand-500 flex-shrink-0">
+                            <div class="min-w-0">
+                                <p class="font-semibold text-sm sm:text-base">Bank Transfer</p>
                                 <p class="text-xs text-gray-500">Transfer to our bank account</p>
                             </div>
                         </label>
@@ -66,15 +66,15 @@
                 </div>
 
                 <!-- Notes -->
-                <div class="bg-dark-900 rounded-2xl shadow-black/20 p-6">
+                <div class="bg-dark-900 rounded-2xl shadow-black/20 p-4 sm:p-6">
                     <h3 class="font-bold text-lg mb-4 flex items-center gap-2">📝 Order Notes</h3>
                     <textarea name="notes" rows="3" class="w-full px-4 py-3 bg-dark-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm" placeholder="Any special instructions...">{{ old('notes') }}</textarea>
                 </div>
             </div>
 
             <!-- Order Summary -->
-            <div class="md:col-span-1">
-                <div class="bg-dark-900 rounded-2xl shadow-black/20 p-6 sticky top-24 animate-on-scroll">
+            <div class="lg:col-span-1">
+                <div class="bg-dark-900 rounded-2xl shadow-black/20 p-4 sm:p-6 lg:sticky lg:top-24 animate-on-scroll">
                     <h3 class="font-bold text-lg mb-4">Order Summary</h3>
                     <div class="space-y-3 mb-4">
                         @foreach($cart->items as $item)
@@ -91,7 +91,7 @@
                                 <p class="text-sm font-medium text-gray-100 truncate">{{ $item->product->name }}</p>
                                 <p class="text-xs text-gray-400">× {{ $item->quantity }}</p>
                             </div>
-                            <p class="text-sm font-semibold">${{ number_format($item->subtotal, 2) }}</p>
+                            <p class="text-sm font-semibold flex-shrink-0">${{ number_format($item->subtotal, 2) }}</p>
                         </div>
                         @endforeach
                     </div>

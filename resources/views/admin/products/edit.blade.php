@@ -6,7 +6,7 @@
 <div class="max-w-3xl">
     <a href="{{ route('admin.products.index') }}" class="text-brand-600 text-sm font-semibold hover:underline mb-4 inline-block">← Back to Products</a>
 
-    <div class="bg-slate-900 rounded-2xl shadow-black/20 p-8">
+    <div class="bg-slate-900 rounded-2xl shadow-black/20 p-4 sm:p-6 lg:p-8">
         <form action="{{ route('admin.products.update', $product) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
             @csrf @method('PUT')
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -107,9 +107,9 @@
                 </div>
             </div>
 
-            <div class="flex gap-3">
+            <div class="flex flex-col sm:flex-row gap-3">
                 <button type="submit" class="px-8 py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all">Update Product</button>
-                <a href="{{ route('admin.products.index') }}" class="px-8 py-3 bg-slate-800 text-gray-300 rounded-xl font-semibold hover:bg-gray-200 transition-colors">Cancel</a>
+                <a href="{{ route('admin.products.index') }}" class="px-8 py-3 bg-slate-800 text-gray-300 rounded-xl font-semibold hover:bg-gray-200 transition-colors text-center">Cancel</a>
             </div>
         </form>
     </div>
