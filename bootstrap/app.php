@@ -23,5 +23,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Handle 419 CSRF token mismatch gracefully
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            return redirect()->back()->with('error', 'Session expired. Please try again.')->withInput();
+        });
     })->create();
