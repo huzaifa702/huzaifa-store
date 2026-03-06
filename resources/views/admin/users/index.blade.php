@@ -4,13 +4,13 @@
 
 @section('content')
 <div class="mb-6">
-    <form action="{{ route('admin.users.index') }}" method="GET" class="flex gap-3">
+    <form action="{{ route('admin.users.index') }}" method="GET" class="flex gap-3 flex-wrap">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search customers..." class="px-4 py-2 bg-slate-900 rounded-xl border shadow-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 w-64">
         <button type="submit" class="px-4 py-2 bg-brand-500 text-white rounded-xl text-sm font-semibold hover:bg-brand-600 transition-colors">Search</button>
     </form>
 </div>
 
-<div class="bg-slate-900 rounded-2xl shadow-black/20 overflow-hidden">
+<div class="bg-slate-900 rounded-2xl shadow-black/20 overflow-x-auto">
     <table class="w-full">
         <thead class="bg-slate-800/50">
             <tr>

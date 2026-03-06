@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="flex items-center justify-between mb-6">
-    <form action="{{ route('admin.orders.index') }}" method="GET" class="flex gap-3">
+    <form action="{{ route('admin.orders.index') }}" method="GET" class="flex gap-3 flex-wrap">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Search orders..." class="px-4 py-2 bg-slate-900 rounded-xl border shadow-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 w-64">
         <select name="status" class="px-4 py-2 bg-slate-900 rounded-xl border shadow-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400">
             <option value="">All Statuses</option>
@@ -16,7 +16,7 @@
     </form>
 </div>
 
-<div class="bg-slate-900 rounded-2xl shadow-black/20 overflow-hidden">
+<div class="bg-slate-900 rounded-2xl shadow-black/20 overflow-x-auto">
     <table class="w-full">
         <thead class="bg-slate-800/50">
             <tr>

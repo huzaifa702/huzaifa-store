@@ -22,7 +22,7 @@
     <a href="{{ route('admin.products.create') }}" class="px-6 py-2 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all text-sm">+ Add Product</a>
 </div>
 
-<div class="bg-slate-900 rounded-2xl shadow-black/20 overflow-hidden">
+<div class="bg-slate-900 rounded-2xl shadow-black/20 overflow-x-auto">
     <table class="w-full">
         <thead class="bg-slate-800/50">
             <tr>
