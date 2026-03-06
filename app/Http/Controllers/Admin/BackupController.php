@@ -21,7 +21,7 @@ class BackupController extends Controller
         $adminId = session('admin_id');
         $backup = BackupService::createBackup($adminId);
 
-        ActivityLogService::log('backup_created', "Database backup '{$backup->filename}' created", null, $backup);
+        try { ActivityLogService::log('backup_created', "Database backup '{$backup->filename}' created", null, $backup); } catch (\Exception $e) { /* ignore */ }
 
         return back()->with('success', 'Backup created successfully! File: ' . $backup->filename);
     }
@@ -42,7 +42,7 @@ class BackupController extends Controller
         $result = BackupService::restoreBackup($backup);
 
         if ($result) {
-            ActivityLogService::log('backup_restored', "Database restored from '{$backup->filename}'", null, $backup);
+            try { ActivityLogService::log('backup_restored', "Database restored from '{$backup->filename}'", null, $backup); } catch (\Exception $e) { /* ignore */ }
             return back()->with('success', 'Database restored successfully from backup!');
         }
 
@@ -51,7 +51,7 @@ class BackupController extends Controller
 
     public function destroy(Backup $backup)
     {
-        ActivityLogService::log('backup_deleted', "Backup '{$backup->filename}' deleted", null, $backup);
+        try { ActivityLogService::log('backup_deleted', "Backup '{$backup->filename}' deleted", null, $backup); } catch (\Exception $e) { /* ignore */ }
         BackupService::deleteBackup($backup);
 
         return back()->with('success', 'Backup deleted successfully!');

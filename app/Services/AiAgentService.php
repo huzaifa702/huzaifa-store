@@ -198,36 +198,48 @@ class AiAgentService
                 ]);
 
             if ($response->successful()) {
-                EmailLog::create([
-                    'user_id' => $userId,
-                    'email' => $email,
-                    'type' => 'marketing',
-                    'subject' => $subject,
-                    'status' => 'sent',
-                    'resend_id' => $response->json('messageId'),
-                ]);
+                try {
+                    EmailLog::create([
+                        'user_id' => $userId,
+                        'email' => $email,
+                        'type' => 'marketing',
+                        'subject' => $subject,
+                        'status' => 'sent',
+                        'resend_id' => $response->json('messageId'),
+                    ]);
+                } catch (\Exception $logEx) {
+                    // Don't fail if logging fails
+                }
                 return ['success' => true, 'message' => 'Email sent successfully!'];
             }
 
             $errorMsg = $response->json('message') ?? $response->body();
             Log::error('Brevo API error: ' . $errorMsg);
-            EmailLog::create([
-                'user_id' => $userId,
-                'email' => $email,
-                'type' => 'marketing',
-                'subject' => $subject,
-                'status' => 'failed'
-            ]);
+            try {
+                EmailLog::create([
+                    'user_id' => $userId,
+                    'email' => $email,
+                    'type' => 'marketing',
+                    'subject' => $subject,
+                    'status' => 'failed'
+                ]);
+            } catch (\Exception $logEx) {
+                // Don't fail if logging fails
+            }
             return ['success' => false, 'error' => 'Email failed: ' . $errorMsg];
         } catch (\Exception $e) {
             Log::error('Brevo API Exception: ' . $e->getMessage());
-            EmailLog::create([
-                'user_id' => $userId,
-                'email' => $email,
-                'type' => 'marketing',
-                'subject' => $subject,
-                'status' => 'failed'
-            ]);
+            try {
+                EmailLog::create([
+                    'user_id' => $userId,
+                    'email' => $email,
+                    'type' => 'marketing',
+                    'subject' => $subject,
+                    'status' => 'failed'
+                ]);
+            } catch (\Exception $logEx) {
+                // Don't fail if logging fails
+            }
             return ['success' => false, 'error' => 'Email failed: ' . $e->getMessage()];
         }
     }

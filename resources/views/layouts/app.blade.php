@@ -529,7 +529,8 @@
 
             /* Grid layouts */
             .grid-cols-4, .lg\:grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
-            .grid-cols-3, .lg\:grid-cols-3, .md\:grid-cols-3 { grid-template-columns: repeat(2, 1fr) !important; }
+            .grid-cols-3, .lg\:grid-cols-3, .md\:grid-cols-3 { grid-template-columns: 1fr !important; }
+            .lg\:col-span-2 { grid-column: span 1 !important; }
 
             /* Footer columns */
             footer .grid { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
@@ -549,6 +550,8 @@
             h3 { font-size: 1.15rem !important; }
             .product-grid { grid-template-columns: 1fr !important; }
             .grid-cols-2 { grid-template-columns: 1fr !important; }
+            .grid-cols-4, .lg\:grid-cols-4 { grid-template-columns: 1fr !important; }
+            .sm\:grid-cols-2 { grid-template-columns: 1fr !important; }
 
             /* Buttons */
             .btn-glow, a[class*="px-5"], a[class*="px-6"], a[class*="px-8"] {

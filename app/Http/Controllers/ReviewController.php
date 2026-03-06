@@ -36,7 +36,7 @@ class ReviewController extends Controller
             'is_approved' => true,
         ]);
 
-        ActivityLogService::log('review_submitted', 'Review submitted for product', auth()->user(), $review);
+        try { ActivityLogService::log('review_submitted', 'Review submitted for product', auth()->user(), $review); } catch (\Exception $e) { /* ignore */ }
 
         return back()->with('success', 'Review submitted successfully!');
     }
