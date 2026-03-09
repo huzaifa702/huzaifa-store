@@ -63,8 +63,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet">
 
-    <!-- Alpine.js Intersect Plugin (MUST load before Alpine) -->
-    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/intersect@3.x.x/dist/cdn.min.js"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
@@ -73,9 +71,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
     <style>
-        /* Hide Alpine.js elements until initialized — prevents chatbot flash on page load */
-        [x-cloak] { display: none !important; }
-
         * {
             font-family: 'Inter', system-ui, sans-serif;
             box-sizing: border-box;
@@ -500,86 +495,16 @@
         .img-magnify img { transition: transform 0.8s cubic-bezier(0.23, 1, 0.32, 1); }
         .img-magnify:hover img { transform: scale(1.15); }
 
-        /* ===== COMPREHENSIVE RESPONSIVE ===== */
-
-        /* Large tablets & small desktops */
-        @media (max-width: 1024px) {
-            .product-grid { grid-template-columns: repeat(3, 1fr) !important; }
-        }
-
-        /* Tablets */
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 768px) {
             .hero-gradient { min-height: auto; padding: 2rem 0; }
-            .card-3d:hover { transform: translateY(-4px) scale(1.01); }
+            .card-3d:hover { transform: translateY(-6px) scale(1.01); }
             .glass-card:hover { transform: none; }
-            .product-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
-
-            /* Hero text */
-            .hero-gradient h1, [class*="text-5xl"], [class*="text-6xl"], [class*="text-7xl"] {
-                font-size: 2rem !important; line-height: 1.2 !important;
-            }
-            [class*="text-4xl"] { font-size: 1.75rem !important; }
-            [class*="text-3xl"] { font-size: 1.5rem !important; }
-
-            /* Sections padding */
-            section, .py-16, .py-20, .py-24 {
-                padding-top: 2.5rem !important; padding-bottom: 2.5rem !important;
-            }
-            .px-6, .px-8, .px-10, .px-12 { padding-left: 1rem !important; padding-right: 1rem !important; }
-
-            /* Grid layouts */
-            .grid-cols-4, .lg\:grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
-            .grid-cols-3, .lg\:grid-cols-3, .md\:grid-cols-3 { grid-template-columns: 1fr !important; }
-            .lg\:col-span-2 { grid-column: span 1 !important; }
-
-            /* Footer columns */
-            footer .grid { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
-
-            /* Tables */
-            table { display: block; overflow-x: auto; white-space: nowrap; }
-
-            /* Hide 3D decorations on mobile */
-            .hover-rotate-3d:hover { transform: none; }
-            .tilt-card:hover { box-shadow: 0 8px 20px -5px rgba(99,102,241,0.2); }
         }
-
-        /* Small phones */
         @media (max-width: 480px) {
-            h1 { font-size: 1.6rem !important; }
-            h2 { font-size: 1.35rem !important; }
-            h3 { font-size: 1.15rem !important; }
-            .product-grid { grid-template-columns: 1fr !important; }
-            .grid-cols-2 { grid-template-columns: 1fr !important; }
-            .grid-cols-4, .lg\:grid-cols-4 { grid-template-columns: 1fr !important; }
-            .sm\:grid-cols-2 { grid-template-columns: 1fr !important; }
-
-            /* Buttons */
-            .btn-glow, a[class*="px-5"], a[class*="px-6"], a[class*="px-8"] {
-                padding-left: 1rem !important; padding-right: 1rem !important;
-                font-size: 0.8rem !important;
-            }
-
-            /* Cards */
-            .glass-card, .card-3d { border-radius: 1rem; }
-
-            /* Login button */
-            a[class*="rounded-xl"][class*="text-sm"] { padding: 0.5rem 0.75rem !important; font-size: 0.75rem !important; }
-
-            /* Search input */
-            input[name="q"] { font-size: 0.875rem; }
+            h1 { font-size: 1.75rem !important; }
+            h2 { font-size: 1.5rem !important; }
         }
-
-        /* Chatbot responsive */
-        @media (max-width: 640px) {
-            .fixed.bottom-6.right-6 { bottom: 1rem !important; right: 1rem !important; }
-            .fixed.bottom-6.right-6 > div[x-show] {
-                width: calc(100vw - 2rem) !important;
-                max-height: 80vh !important;
-                right: 0 !important;
-                bottom: 4.5rem !important;
-            }
-        }
-
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
                 animation-duration: 0.01ms !important;
@@ -630,7 +555,6 @@
                             x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
                             class="absolute top-full left-0 pt-3 w-56 z-50">
                             <div class="glass-card rounded-2xl shadow-2xl shadow-black/60 py-2">
-                                @php $navCategories = \App\Models\Category::where('is_active', true)->orderBy('sort_order')->get(); @endphp
                                 @foreach($navCategories as $cat)
                                     <a href="{{ route('categories.show', $cat) }}"
                                         class="block px-4 py-2.5 text-gray-300 hover:bg-brand-600/15 hover:text-brand-300 transition-all rounded-lg mx-2">{{ $cat->name }}</a>
@@ -638,10 +562,6 @@
                             </div>
                         </div>
                     </div>
-                    <a href="{{ route('chatbot.page') }}"
-                        class="text-gray-300 hover:text-white font-medium transition-colors nav-link-anim flex items-center gap-1.5">
-                        <span class="text-lg">🤖</span> AI Agent
-                    </a>
                 </div>
 
                 <!-- Search + Icons -->
@@ -684,8 +604,6 @@
                                 class="absolute right-0 top-full mt-3 w-52 glass-card rounded-2xl shadow-2xl shadow-black/60 py-2 z-50">
                                 <a href="{{ route('profile.index') }}"
                                     class="block px-4 py-2.5 text-gray-300 hover:bg-brand-600/15 hover:text-brand-300 transition-all rounded-lg mx-2">My Profile</a>
-                                <a href="{{ route('wishlist.index') }}"
-                                    class="block px-4 py-2.5 text-gray-300 hover:bg-brand-600/15 hover:text-brand-300 transition-all rounded-lg mx-2">❤️ Wishlist</a>
                                 <a href="{{ route('orders.index') }}"
                                     class="block px-4 py-2.5 text-gray-300 hover:bg-brand-600/15 hover:text-brand-300 transition-all rounded-lg mx-2">My Orders</a>
                                 <hr class="my-1.5 border-white/[0.06] mx-2">
@@ -726,11 +644,9 @@
             </form>
             <a href="{{ route('home') }}" class="block py-2.5 text-gray-300 font-medium hover:text-brand-400 transition-colors">Home</a>
             <a href="{{ route('products.index') }}" class="block py-2.5 text-gray-300 font-medium hover:text-brand-400 transition-colors">Products</a>
-            <a href="{{ route('chatbot.page') }}" class="block py-2.5 text-gray-300 font-medium hover:text-brand-400 transition-colors">🤖 AI Agent</a>
-            @php $mobileCategories = \App\Models\Category::where('is_active', true)->orderBy('sort_order')->get(); @endphp
             <div class="border-t border-white/[0.06] pt-2 mt-2">
                 <p class="text-xs text-gray-500 uppercase tracking-wider mb-2">Categories</p>
-                @foreach($mobileCategories as $cat)
+                @foreach($navCategories as $cat)
                     <a href="{{ route('categories.show', $cat) }}" class="block py-2 text-gray-400 hover:text-brand-400 transition-colors text-sm pl-2">{{ $cat->name }}</a>
                 @endforeach
             </div>
@@ -799,8 +715,11 @@
                         </div>
                         <span class="text-xl font-bold text-white">Huzaifa Store</span>
                     </div>
-                    <p class="text-gray-500 text-sm leading-relaxed">Your premium destination for quality products. We
-                        bring you the best in electronics, fashion, and lifestyle.</p>
+                    <p class="text-gray-500 text-sm leading-relaxed">Your premium destination for quality products.
+                        @if(isset($navCategories) && $navCategories->count())
+                            We bring you the best in {{ Str::lower($navCategories->pluck('name')->join(', ', ' and ')) }}.
+                        @endif
+                    </p>
                     <!-- Social Icons -->
                     <div class="flex gap-3 mt-4">
                         <a href="#" class="w-9 h-9 bg-dark-800 rounded-lg flex items-center justify-center text-gray-500 hover:bg-brand-600 hover:text-white transition-all">
@@ -827,10 +746,7 @@
                 <div>
                     <h3 class="text-white font-semibold mb-4">Customer Service</h3>
                     <ul class="space-y-2.5 text-sm">
-                        <li><a href="#" class="hover:text-brand-400 transition-colors">Contact Us</a></li>
-                        <li><a href="#" class="hover:text-brand-400 transition-colors">Shipping Policy</a></li>
-                        <li><a href="#" class="hover:text-brand-400 transition-colors">Return Policy</a></li>
-                        <li><a href="#" class="hover:text-brand-400 transition-colors">FAQs</a></li>
+                        <!-- Links removed until pages exist -->
                     </ul>
                 </div>
                 <div>
@@ -852,9 +768,6 @@
         </div>
     </footer>
 
-    <!-- AI Chatbot Widget -->
-    @include('partials.chatbot')
-
     <!-- GSAP Animations -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -868,14 +781,11 @@
                 });
             });
 
-            // Stagger product cards — safe animation that never hides permanently
+            // Stagger product cards
             gsap.utils.toArray('.product-grid').forEach(grid => {
-                // Set initial visible state, then animate from offscreen
-                gsap.set(grid.children, { opacity: 1, y: 0 });
                 gsap.from(grid.children, {
-                    scrollTrigger: { trigger: grid, start: 'top 98%', toggleActions: 'play none none none' },
-                    y: 40, opacity: 0, duration: 0.6, stagger: 0.08, ease: 'power3.out',
-                    clearProps: 'all' // Remove inline styles after animation completes
+                    scrollTrigger: { trigger: grid, start: 'top 85%' },
+                    y: 80, opacity: 0, duration: 0.7, stagger: 0.1, ease: 'power3.out'
                 });
             });
 
@@ -900,6 +810,8 @@
             });
         });
     </script>
+
+    @include('partials.chatbot')
 
     @yield('scripts')
 </body>

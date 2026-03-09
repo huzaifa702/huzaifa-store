@@ -45,14 +45,12 @@ class OrderController extends Controller
             $order->payment->update(['status' => 'completed']);
         }
 
-        try {
-            ActivityLogService::log(
-                'order_status_changed',
-                "Order {$order->order_number} status changed from {$oldStatus} to {$request->status}",
-                null,
-                $order
-            );
-        } catch (\Exception $e) { /* ignore */ }
+        ActivityLogService::log(
+            'order_status_changed',
+            "Order {$order->order_number} status changed from {$oldStatus} to {$request->status}",
+            null,
+            $order
+        );
 
         return back()->with('success', 'Order status updated successfully!');
     }

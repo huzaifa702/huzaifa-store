@@ -15,23 +15,8 @@
                 -{{ round((1 - $product->sale_price / $product->price) * 100) }}%
             </span>
         @endif
-
-        <!-- Wishlist Heart -->
-        <div x-data="{ wishlisted: false }" class="absolute top-3 right-3 z-10">
-            <button @click.prevent="
-                fetch('/wishlist/toggle', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
-                    body: JSON.stringify({ product_id: {{ $product->id }} })
-                }).then(r => { if(r.status===401){window.location='/login';return;} return r.json(); }).then(d => { if(d) wishlisted = d.wishlisted; })"
-                class="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 backdrop-blur-sm"
-                :class="wishlisted ? 'bg-red-500/90 text-white shadow-lg shadow-red-500/40 scale-110' : 'bg-dark-900/60 text-gray-400 hover:text-red-400 hover:bg-dark-900/80'">
-                <svg class="w-4 h-4" :fill="wishlisted ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-            </button>
-        </div>
-
         @if($product->is_featured)
-            <span class="absolute top-14 right-3 px-3 py-1 text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-400 text-dark-950 rounded-full shadow-lg">
+            <span class="absolute top-3 right-3 px-3 py-1 text-xs font-bold bg-gradient-to-r from-amber-500 to-yellow-400 text-dark-950 rounded-full shadow-lg">
                 ⭐ Featured
             </span>
         @endif

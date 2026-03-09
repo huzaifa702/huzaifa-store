@@ -8,7 +8,6 @@ use App\Models\Category;
 use App\Models\ProductImage;
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ProductController extends Controller
@@ -18,11 +17,7 @@ class ProductController extends Controller
         $query = Product::with('category', 'primaryImage');
 
         if ($request->filled('search')) {
-            $search = trim($request->search);
-            $query->where(function ($q) use ($search) {
-                $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
-                  ->orWhereRaw('LOWER(sku) LIKE ?', ['%' . strtolower($search) . '%']);
-            });
+            $query->where('name', 'like', '%' . $request->search . '%');
         }
 
         if ($request->filled('category')) {
@@ -30,7 +25,7 @@ class ProductController extends Controller
         }
 
         $products = $query->latest()->paginate(15);
-        $categories = Category::withCount('products')->orderBy('sort_order')->get();
+        $categories = Category::orderBy('sort_order')->get();
 
         return view('admin.products.index', compact('products', 'categories'));
     }
@@ -58,7 +53,7 @@ class ProductController extends Controller
         ]);
 
         $product = Product::create([
-            'name' => $request->name,
+            'name' => \Illuminate\Support\Str::title($request->name),
             'slug' => Str::slug($request->name),
             'category_id' => $request->category_id,
             'price' => $request->price,
@@ -75,17 +70,19 @@ class ProductController extends Controller
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $index => $image) {
-                $path = $image->store('products', 'public');
+                $upload = cloudinary()->upload($image->getRealPath(), [
+                    'folder' => 'huzaifa-store/products'
+                ]);
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'image_path' => $path,
+                    'image_path' => $upload->getSecurePath(),
                     'is_primary' => $index === 0,
                     'sort_order' => $index,
                 ]);
             }
         }
 
-        try { ActivityLogService::log('product_created', "Product '{$product->name}' created", null, $product); } catch (\Exception $e) { /* ignore */ }
+        ActivityLogService::log('product_created', "Product '{$product->name}' created", null, $product);
 
         return redirect()->route('admin.products.index')->with('success', 'Product created successfully!');
     }
@@ -116,7 +113,7 @@ class ProductController extends Controller
         $oldValues = $product->toArray();
 
         $product->update([
-            'name' => $request->name,
+            'name' => \Illuminate\Support\Str::title($request->name),
             'slug' => Str::slug($request->name),
             'category_id' => $request->category_id,
             'price' => $request->price,
@@ -127,95 +124,35 @@ class ProductController extends Controller
             'stock' => $request->stock,
             'is_active' => $request->boolean('is_active', true),
             'is_featured' => $request->boolean('is_featured', false),
-            'meta_title' => $request->input('meta_title', $request->name),
-            'meta_description' => $request->input('meta_description', $request->short_description),
+            'meta_title' => $request->name,
+            'meta_description' => $request->short_description,
         ]);
 
-        // Handle deletion of specific images (from delete checkboxes)
-        if ($request->filled('delete_images')) {
-            foreach ($request->delete_images as $imageId) {
-                $img = ProductImage::where('id', $imageId)->where('product_id', $product->id)->first();
-                if ($img) {
-                    // Delete from storage (only local files, not URLs)
-                    if ($img->image_path && !str_starts_with($img->image_path, 'http') && Storage::disk('public')->exists($img->image_path)) {
-                        Storage::disk('public')->delete($img->image_path);
-                    }
-                    $img->delete();
-                }
-            }
-
-            // Re-assign primary if the primary image was deleted
-            if (!$product->images()->where('is_primary', true)->exists()) {
-                $firstImage = $product->images()->orderBy('sort_order')->first();
-                if ($firstImage) {
-                    $firstImage->update(['is_primary' => true]);
-                }
-            }
-        }
-
-        // Add new uploaded images
         if ($request->hasFile('images')) {
-            $existingCount = $product->images()->count();
             foreach ($request->file('images') as $index => $image) {
-                $path = $image->store('products', 'public');
+                $upload = cloudinary()->upload($image->getRealPath(), [
+                    'folder' => 'huzaifa-store/products'
+                ]);
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'image_path' => $path,
-                    'is_primary' => $existingCount === 0 && $index === 0,
-                    'sort_order' => $existingCount + $index,
+                    'image_path' => $upload->getSecurePath(),
+                    'is_primary' => $product->images()->count() === 0 && $index === 0,
+                    'sort_order' => $product->images()->count() + $index,
                 ]);
             }
         }
 
-        try { ActivityLogService::log('product_updated', "Product '{$product->name}' updated", null, $product, $oldValues, $product->toArray()); } catch (\Exception $e) { /* ignore */ }
+        ActivityLogService::log('product_updated', "Product '{$product->name}' updated", null, $product, $oldValues, $product->toArray());
 
         return redirect()->route('admin.products.index')->with('success', 'Product updated successfully!');
     }
 
     public function destroy(Product $product)
     {
-        try {
-            // Try to nullify order items (may fail if migration didn't run — that's OK)
-            try {
-                \App\Models\OrderItem::where('product_id', $product->id)
-                    ->update(['product_id' => null]);
-            } catch (\Exception $e) {
-                // Ignore — order_items table may not exist or product_id may not be nullable
-            }
+        ActivityLogService::log('product_deleted', "Product '{$product->name}' deleted", null, $product);
+        $product->delete();
 
-            // Try to delete product images from storage
-            try {
-                foreach ($product->images as $img) {
-                    if ($img->image_path && !str_starts_with($img->image_path, 'http') && Storage::disk('public')->exists($img->image_path)) {
-                        Storage::disk('public')->delete($img->image_path);
-                    }
-                }
-                $product->images()->delete();
-            } catch (\Exception $e) {
-                // Ignore — images table may not exist
-            }
-
-            // Try to delete reviews
-            try {
-                $product->reviews()->delete();
-            } catch (\Exception $e) {
-                // Ignore
-            }
-
-            // Try to log activity
-            try {
-                ActivityLogService::log('product_deleted', "Product '{$product->name}' deleted", null, $product);
-            } catch (\Exception $e) {
-                // Ignore — activity_logs table may not exist
-            }
-
-            // Actually delete the product (soft delete)
-            $product->delete();
-
-            return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully!');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Failed to delete product: ' . $e->getMessage());
-        }
+        return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully!');
     }
 
     public function toggleActive(Product $product)
@@ -223,7 +160,7 @@ class ProductController extends Controller
         $product->update(['is_active' => !$product->is_active]);
 
         $status = $product->is_active ? 'activated' : 'deactivated';
-        try { ActivityLogService::log("product_{$status}", "Product '{$product->name}' {$status}", null, $product); } catch (\Exception $e) { /* ignore */ }
+        ActivityLogService::log("product_{$status}", "Product '{$product->name}' {$status}", null, $product);
 
         return back()->with('success', "Product {$status} successfully!");
     }

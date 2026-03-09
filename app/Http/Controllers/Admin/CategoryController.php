@@ -6,19 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
     public function index()
     {
-        try {
-            $categories = Category::withCount('products')->orderBy('sort_order')->paginate(15);
-            return view('admin.categories.index', compact('categories'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Failed to load categories: ' . $e->getMessage());
-        }
+        $categories = Category::withCount('products')->orderBy('sort_order')->paginate(15);
+        return view('admin.categories.index', compact('categories'));
     }
 
     public function create()
@@ -36,40 +31,26 @@ class CategoryController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
-        try {
-            $slug = Str::slug($request->name);
+        $data = [
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+            'description' => $request->description,
+            'is_active' => $request->boolean('is_active', true),
+            'sort_order' => $request->input('sort_order', 0),
+        ];
 
-            // If a soft-deleted category with the same slug exists, force-delete it
-            // This prevents "Duplicate entry" errors when re-creating a previously deleted category
-            $trashedCategory = Category::onlyTrashed()->where('slug', $slug)->first();
-            if ($trashedCategory) {
-                $trashedCategory->forceDelete();
-            }
-
-            $data = [
-                'name' => $request->name,
-                'slug' => $slug,
-                'description' => $request->description,
-                'is_active' => $request->boolean('is_active', true),
-                'sort_order' => $request->input('sort_order', 0),
-            ];
-
-            if ($request->hasFile('image')) {
-                $data['image'] = $request->file('image')->store('categories', 'public');
-            }
-
-            $category = Category::create($data);
-
-            try {
-                ActivityLogService::log('category_created', "Category '{$category->name}' created", null, $category);
-            } catch (\Exception $e) {
-                // Ignore activity log errors — table might not exist
-            }
-
-            return redirect()->route('admin.categories.index')->with('success', 'Category created successfully!');
-        } catch (\Exception $e) {
-            return back()->withInput()->with('error', 'Failed to create category: ' . $e->getMessage());
+        if ($request->hasFile('image')) {
+            $upload = cloudinary()->upload($request->file('image')->getRealPath(), [
+                'folder' => 'huzaifa-store/categories'
+            ]);
+            $data['image'] = $upload->getSecurePath();
         }
+
+        $category = Category::create($data);
+
+        ActivityLogService::log('category_created', "Category '{$category->name}' created", null, $category);
+
+        return redirect()->route('admin.categories.index')->with('success', 'Category created successfully!');
     }
 
     public function edit(Category $category)
@@ -87,86 +68,37 @@ class CategoryController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
-        try {
-            $slug = Str::slug($request->name);
+        $data = [
+            'name' => $request->name,
+            'slug' => Str::slug($request->name),
+            'description' => $request->description,
+            'is_active' => $request->boolean('is_active', true),
+            'sort_order' => $request->input('sort_order', 0),
+        ];
 
-            // If a different soft-deleted category has the same slug, force-delete it
-            $trashedCategory = Category::onlyTrashed()->where('slug', $slug)->first();
-            if ($trashedCategory) {
-                $trashedCategory->forceDelete();
-            }
-
-            $data = [
-                'name' => $request->name,
-                'slug' => $slug,
-                'description' => $request->description,
-                'is_active' => $request->boolean('is_active', true),
-                'sort_order' => $request->input('sort_order', 0),
-            ];
-
-            // Handle image update
-            if ($request->hasFile('image')) {
-                try {
-                    if ($category->image && Storage::disk('public')->exists($category->image)) {
-                        Storage::disk('public')->delete($category->image);
-                    }
-                } catch (\Exception $e) { /* ignore */ }
-                $data['image'] = $request->file('image')->store('categories', 'public');
-            }
-
-            // Handle explicit image removal
-            if ($request->boolean('remove_image') && !$request->hasFile('image')) {
-                try {
-                    if ($category->image && Storage::disk('public')->exists($category->image)) {
-                        Storage::disk('public')->delete($category->image);
-                    }
-                } catch (\Exception $e) { /* ignore */ }
-                $data['image'] = null;
-            }
-
-            $category->update($data);
-
-            try {
-                ActivityLogService::log('category_updated', "Category '{$category->name}' updated", null, $category);
-            } catch (\Exception $e) {
-                // Ignore activity log errors
-            }
-
-            return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully!');
-        } catch (\Exception $e) {
-            return back()->withInput()->with('error', 'Failed to update category: ' . $e->getMessage());
+        if ($request->hasFile('image')) {
+            $upload = cloudinary()->upload($request->file('image')->getRealPath(), [
+                'folder' => 'huzaifa-store/categories'
+            ]);
+            $data['image'] = $upload->getSecurePath();
         }
+
+        $category->update($data);
+
+        ActivityLogService::log('category_updated', "Category '{$category->name}' updated", null, $category);
+
+        return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully!');
     }
 
     public function destroy(Category $category)
     {
-        try {
-            // Soft-delete all products in this category
-            $productCount = 0;
-            try {
-                $productCount = $category->products()->count();
-                if ($productCount > 0) {
-                    $category->products()->delete();
-                }
-            } catch (\Exception $e) { /* ignore */ }
-
-            // Delete category image from storage
-            try {
-                if ($category->image && Storage::disk('public')->exists($category->image)) {
-                    Storage::disk('public')->delete($category->image);
-                }
-            } catch (\Exception $e) { /* ignore */ }
-
-            // Log activity
-            try {
-                ActivityLogService::log('category_deleted', "Category '{$category->name}' deleted ({$productCount} products removed)", null, $category);
-            } catch (\Exception $e) { /* ignore */ }
-
-            $category->delete();
-
-            return redirect()->route('admin.categories.index')->with('success', "Category deleted successfully! ({$productCount} products also removed)");
-        } catch (\Exception $e) {
-            return back()->with('error', 'Failed to delete category: ' . $e->getMessage());
+        if ($category->products()->count() > 0) {
+            return back()->with('error', 'Cannot delete category with products. Remove products first.');
         }
+
+        ActivityLogService::log('category_deleted', "Category '{$category->name}' deleted", null, $category);
+        $category->delete();
+
+        return redirect()->route('admin.categories.index')->with('success', 'Category deleted successfully!');
     }
 }

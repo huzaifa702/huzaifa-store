@@ -93,39 +93,23 @@
                 <p class="text-sm text-gray-400 mt-2">SKU: {{ $product->sku }}</p>
             @endif
 
-            <!-- Add to Cart + Wishlist -->
+            <!-- Add to Cart -->
             @if($product->stock > 0)
-            <div class="mt-6 flex items-center gap-3">
-                <form action="{{ route('cart.add') }}" method="POST" class="flex-1">
-                    @csrf
-                    <input type="hidden" name="product_id" value="{{ $product->id }}">
-                    <div class="flex items-center gap-4">
-                        <div class="flex items-center bg-dark-800 border border-dark-700 rounded-xl" x-data="{ qty: 1 }">
-                            <button type="button" @click="qty = Math.max(1, qty-1)" class="px-4 py-3 text-gray-400 hover:text-brand-400 font-bold text-lg transition-colors">−</button>
-                            <input type="number" name="quantity" x-model="qty" min="1" max="{{ $product->stock }}" class="w-16 text-center bg-transparent font-semibold text-white focus:outline-none">
-                            <button type="button" @click="qty = Math.min({{ $product->stock }}, qty+1)" class="px-4 py-3 text-gray-400 hover:text-brand-400 font-bold text-lg transition-colors">+</button>
-                        </div>
-                        <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-brand-600 to-brand-500 text-white rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-brand-500/30 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                            Add to Cart
-                        </button>
+            <form action="{{ route('cart.add') }}" method="POST" class="mt-6">
+                @csrf
+                <input type="hidden" name="product_id" value="{{ $product->id }}">
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center bg-dark-800 border border-dark-700 rounded-xl" x-data="{ qty: 1 }">
+                        <button type="button" @click="qty = Math.max(1, qty-1)" class="px-4 py-3 text-gray-400 hover:text-brand-400 font-bold text-lg transition-colors">−</button>
+                        <input type="number" name="quantity" x-model="qty" min="1" max="{{ $product->stock }}" class="w-16 text-center bg-transparent font-semibold text-white focus:outline-none">
+                        <button type="button" @click="qty = Math.min({{ $product->stock }}, qty+1)" class="px-4 py-3 text-gray-400 hover:text-brand-400 font-bold text-lg transition-colors">+</button>
                     </div>
-                </form>
-
-                <!-- Wishlist Heart -->
-                <div x-data="{ wishlisted: false }">
-                    <button @click="
-                        fetch('/wishlist/toggle', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
-                            body: JSON.stringify({ product_id: {{ $product->id }} })
-                        }).then(r => { if(r.status===401){window.location='/login';return;} return r.json(); }).then(d => { if(d) wishlisted = d.wishlisted; })"
-                        class="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 border"
-                        :class="wishlisted ? 'bg-red-500/20 border-red-500/40 text-red-400 scale-110' : 'bg-dark-800 border-dark-700 text-gray-400 hover:text-red-400 hover:border-red-500/30'">
-                        <svg class="w-6 h-6" :fill="wishlisted ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-brand-600 to-brand-500 text-white rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-brand-500/30 transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                        Add to Cart
                     </button>
                 </div>
-            </div>
+            </form>
             @endif
 
             <!-- Description -->

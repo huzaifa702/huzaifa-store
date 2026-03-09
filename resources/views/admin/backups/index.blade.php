@@ -12,7 +12,7 @@
 </div>
 
 @if($backups->count() > 0)
-<div class="bg-slate-900 rounded-2xl shadow-black/20 overflow-x-auto">
+<div class="bg-slate-900 rounded-2xl shadow-black/20 overflow-hidden">
     <table class="w-full">
         <thead class="bg-slate-800/50">
             <tr>
