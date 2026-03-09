@@ -1,4 +1,4 @@
-<div class="group glass-card rounded-2xl overflow-hidden transition-all duration-500 card-3d relative border border-white/5 hover:border-brand-500/20">
+<div data-tilt data-tilt-max="15" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.4" class="group glass-card rounded-2xl overflow-hidden transition-all duration-500 card-3d relative border border-white/5 hover:border-brand-500/20 tilt-card">
     <!-- Image -->
     <a href="{{ route('products.show', $product) }}" class="block relative img-magnify aspect-square bg-dark-800">
         <img src="{{ $product->primary_image_url }}"

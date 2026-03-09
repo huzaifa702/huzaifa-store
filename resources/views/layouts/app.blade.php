@@ -752,12 +752,13 @@
                 <div>
                     <h3 class="text-white font-semibold mb-4">Newsletter</h3>
                     <p class="text-gray-500 text-sm mb-3">Get updates on new products and deals.</p>
-                    <div class="flex">
-                        <input type="email" placeholder="Your email"
+                    <form action="#" method="POST" class="flex">
+                        @csrf
+                        <input type="email" name="email" required placeholder="Your email"
                             class="flex-1 px-4 py-2.5 bg-dark-800/60 border border-white/[0.06] rounded-l-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50">
-                        <button
+                        <button type="submit"
                             class="px-5 py-2.5 bg-gradient-to-r from-brand-600 to-neon-cyan text-white rounded-r-xl text-sm font-semibold hover:opacity-90 transition-opacity">Subscribe</button>
-                    </div>
+                    </form>
                 </div>
             </div>
             <div class="neon-line mt-12 mb-6"></div>
@@ -812,6 +813,22 @@
     </script>
 
     @include('partials.chatbot')
+
+    <!-- Vanilla Tilt 3D Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js" integrity="sha512-wC/cunGGDjXSl9OHweO0RuZgO53SXR5t9P5HIfwP1y07T12Z2gJ/CZeYaZf2QGfG1XyvH1pQ20Wz70nJ9C4h2A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            if(window.VanillaTilt) {
+                VanillaTilt.init(document.querySelectorAll("[data-tilt]"), {
+                    max: 15,
+                    speed: 400,
+                    glare: true,
+                    "max-glare": 0.2,
+                    scale: 1.02
+                });
+            }
+        });
+    </script>
 
     @yield('scripts')
 </body>
