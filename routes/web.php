@@ -11,6 +11,8 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\WishlistController;
 
 // Chatbot / AI Agent
 Route::get('/chatbot', [ChatbotController::class, 'page'])->name('chatbot.page');

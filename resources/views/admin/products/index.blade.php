@@ -5,9 +5,9 @@
 @section('content')
 <div class="flex items-center justify-between mb-6">
     <div>
-        <form action="{{ route('admin.products.index') }}" method="GET" class="flex gap-3">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products..." class="px-4 py-2 bg-slate-900 rounded-xl border border-white/10 shadow-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 w-[200px] lg:w-64">
-            <select name="category" class="px-4 py-2 bg-slate-900 rounded-xl border border-white/10 shadow-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 max-w-[200px]" onchange="this.form.submit()">
+        <form action="{{ route('admin.products.index') }}" method="GET" class="flex flex-wrap gap-3">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products..." class="px-4 py-2 bg-slate-900 rounded-xl border border-white/10 shadow-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 w-full sm:w-[200px] lg:w-64">
+            <select name="category" class="px-4 py-2 bg-slate-900 rounded-xl border border-white/10 shadow-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 w-full sm:w-auto" onchange="this.form.submit()">
                 <option value="">All Categories</option>
                 @foreach($categories as $category)
                     <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
@@ -20,8 +20,9 @@
 </div>
 
 <div class="bg-slate-900 rounded-2xl shadow-black/20 overflow-hidden">
-    <table class="w-full">
-        <thead class="bg-slate-800/50">
+    <div class="overflow-x-auto">
+        <table class="w-full min-w-[800px]">
+            <thead class="bg-slate-800/50">
             <tr>
                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Product</th>
                 <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Category</th>
@@ -75,7 +76,8 @@
             </tr>
             @endforeach
         </tbody>
-    </table>
+        </table>
+    </div>
 </div>
 <div class="mt-6">{{ $products->withQueryString()->links() }}</div>
 @endsection

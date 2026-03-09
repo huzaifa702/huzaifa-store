@@ -25,7 +25,7 @@
         <div class="flex items-center gap-3">
             <span class="text-gray-500 text-sm">Sort by:</span>
             <div class="flex gap-2">
-                @foreach(['newest' => 'Newest', 'price_low' => 'Price ↑', 'price_high' => 'Price ↓'] as $val => $label)
+                @foreach(['newest' => 'Newest', 'price_low' => 'Price: Low to High', 'price_high' => 'Price: High to Low'] as $val => $label)
                     <a href="{{ route('categories.show', $category) }}?sort={{ $val }}" class="px-3 py-1 rounded-lg text-sm font-medium {{ request('sort', 'newest') == $val ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'bg-dark-800 text-gray-400 hover:bg-dark-700 border border-dark-700' }} transition-all">{{ $label }}</a>
                 @endforeach
             </div>

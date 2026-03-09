@@ -223,27 +223,36 @@
 </section>
 @endif
 
-<!-- Latest Products -->
-<section class="py-20">
+<!-- Products by Category -->
+@foreach($categoriesWithProducts as $category)
+<section class="py-12 {{ $loop->even ? 'bg-dark-950/50' : '' }}">
     <div class="max-w-7xl mx-auto px-4">
-        <div class="flex items-end justify-between mb-12">
+        <div class="flex items-end justify-between mb-8 pb-4 border-b border-white/5">
             <div>
-                <span class="inline-block px-4 py-1 bg-neon-cyan/10 rounded-full text-neon-cyan text-sm font-semibold border border-neon-cyan/20 mb-4">🆕 Just In</span>
-                <h2 class="text-3xl md:text-4xl font-black gradient-text-emerald">Latest Products</h2>
-                <p class="text-gray-400 mt-2">Freshly added to our collection</p>
+                <h2 class="text-2xl md:text-3xl font-black text-white">{{ $category->name }}</h2>
+                @if($category->description)
+                    <p class="text-gray-400 mt-1 text-sm">{{ Str::limit($category->description, 100) }}</p>
+                @endif
             </div>
-            <a href="{{ route('products.index') }}?sort=newest" class="hidden md:flex items-center gap-2 text-neon-cyan hover:text-cyan-300 font-semibold transition-colors group">
+            <a href="{{ route('categories.show', $category) }}" class="hidden md:flex items-center gap-2 text-brand-400 hover:text-brand-300 font-semibold transition-colors group text-sm">
                 View All <span class="group-hover:translate-x-1 transition-transform">→</span>
             </a>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            @foreach($latestProducts as $product)
+            @foreach($category->activeProducts as $product)
                 @include('partials.product-card', ['product' => $product])
             @endforeach
         </div>
+
+        <div class="mt-8 text-center md:hidden">
+            <a href="{{ route('categories.show', $category) }}" class="inline-block px-6 py-2 border border-brand-500/30 text-brand-400 rounded-xl text-sm font-semibold hover:bg-brand-500/10 transition-colors">
+                View All {{ $category->name }}
+            </a>
+        </div>
     </div>
 </section>
+@endforeach
 
 <!-- Animated Brands Marquee -->
 <section class="py-12 border-y border-white/5 overflow-hidden">

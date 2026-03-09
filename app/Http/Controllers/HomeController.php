@@ -21,10 +21,12 @@ class HomeController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        $latestProducts = Product::where('is_active', true)
-            ->with('primaryImage', 'category')
-            ->latest()
-            ->take(8)
+        $categoriesWithProducts = Category::where('is_active', true)
+            ->with(['activeProducts' => function($query) {
+                $query->with('primaryImage', 'category')->latest()->take(8);
+            }])
+            ->has('activeProducts')
+            ->orderBy('sort_order')
             ->get();
 
         $saleProducts = Product::where('is_active', true)
@@ -33,6 +35,6 @@ class HomeController extends Controller
             ->take(4)
             ->get();
 
-        return view('home', compact('featuredProducts', 'categories', 'latestProducts', 'saleProducts'));
+        return view('home', compact('featuredProducts', 'categories', 'categoriesWithProducts', 'saleProducts'));
     }
 }
