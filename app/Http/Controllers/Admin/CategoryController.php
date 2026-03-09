@@ -93,12 +93,12 @@ class CategoryController extends Controller
     public function destroy(Category $category)
     {
         if ($category->products()->count() > 0) {
-            return back()->with('error', 'Cannot delete category with products. Remove products first.');
+            $category->products()->delete();
         }
 
-        ActivityLogService::log('category_deleted', "Category '{$category->name}' deleted", null, $category);
+        ActivityLogService::log('category_deleted', "Category '{$category->name}' deleted along with its products", null, $category);
         $category->delete();
 
-        return redirect()->route('admin.categories.index')->with('success', 'Category deleted successfully!');
+        return redirect()->route('admin.categories.index')->with('success', 'Category and its associated products deleted successfully!');
     }
 }

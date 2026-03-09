@@ -12,6 +12,13 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
 
+// Chatbot / AI Agent
+Route::get('/chatbot', [ChatbotController::class, 'page'])->name('chatbot.page');
+Route::post('/chatbot/chat', [ChatbotController::class, 'chat'])->name('chatbot.chat');
+Route::post('/chatbot/image-search', [ChatbotController::class, 'imageSearch'])->name('chatbot.image');
+Route::post('/chatbot/tts', [ChatbotController::class, 'synthesizeSpeech'])->name('chatbot.tts');
+Route::post('/chatbot/email', [ChatbotController::class, 'sendEmail'])->name('chatbot.email');
+
 // Homepage
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -55,4 +62,8 @@ Route::middleware('auth')->group(function () {
 
     // Reviews
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
+
+    // Wishlist
+    Route::get('/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
 });

@@ -6,7 +6,13 @@
 <div class="flex items-center justify-between mb-6">
     <div>
         <form action="{{ route('admin.products.index') }}" method="GET" class="flex gap-3">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products..." class="px-4 py-2 bg-slate-900 rounded-xl border shadow-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 w-64">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products..." class="px-4 py-2 bg-slate-900 rounded-xl border border-white/10 shadow-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 w-[200px] lg:w-64">
+            <select name="category" class="px-4 py-2 bg-slate-900 rounded-xl border border-white/10 shadow-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 max-w-[200px]" onchange="this.form.submit()">
+                <option value="">All Categories</option>
+                @foreach($categories as $category)
+                    <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                @endforeach
+            </select>
             <button type="submit" class="px-4 py-2 bg-brand-500 text-white rounded-xl text-sm font-semibold hover:bg-brand-600 transition-colors">Search</button>
         </form>
     </div>

@@ -371,10 +371,13 @@ I can help with:
 
             // ── Per-message TTS (ElevenLabs → browser fallback) ──
             async speakTTS(text, index) {
-                if (this.playingIndex === index && this.currentAudio) {
-                    this.currentAudio.pause();
-                    this.currentAudio.currentTime = 0;
-                    this.currentAudio = null;
+                if (this.playingIndex === index) {
+                    if (this.currentAudio) {
+                        this.currentAudio.pause();
+                        this.currentAudio.currentTime = 0;
+                        this.currentAudio = null;
+                    }
+                    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
                     this.playingIndex = -1;
                     return;
                 }
