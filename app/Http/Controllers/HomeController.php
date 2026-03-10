@@ -105,12 +105,13 @@ class HomeController extends Controller
                 ];
             }
 
-            return view('home', compact('featuredProducts', 'categories', 'latestProducts', 'saleProducts', 'heroSlides', 'productCount', 'categoryCount'));
+            return view('home', compact('featuredProducts', 'categories', 'categoriesWithProducts', 'latestProducts', 'saleProducts', 'heroSlides', 'productCount', 'categoryCount'));
         } catch (\Exception $e) {
             // Fallback: show home page with empty data if DB query fails
             return view('home', [
                 'featuredProducts' => collect(),
                 'categories' => collect(),
+                'categoriesWithProducts' => collect(),
                 'latestProducts' => collect(),
                 'saleProducts' => collect(),
                 'heroSlides' => [
