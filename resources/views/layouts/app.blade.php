@@ -498,14 +498,51 @@
         .img-magnify:hover img { transform: scale(1.15); }
 
         /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .lg\:grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+            .lg\:grid-cols-3 { grid-template-columns: repeat(2, 1fr) !important; }
+        }
         @media (max-width: 768px) {
             .hero-gradient { min-height: auto; padding: 2rem 0; }
             .card-3d:hover { transform: translateY(-6px) scale(1.01); }
             .glass-card:hover { transform: none; }
+
+            /* Grids to single column */
+            .grid-cols-2, .sm\:grid-cols-2, .md\:grid-cols-2 { grid-template-columns: 1fr !important; }
+            .lg\:grid-cols-4 { grid-template-columns: repeat(2, 1fr) !important; }
+            .lg\:grid-cols-3 { grid-template-columns: 1fr !important; }
+
+            /* Tables horizontal scroll */
+            table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+
+            /* Spacing reductions */
+            .p-6 { padding: 1rem !important; }
+            .px-6 { padding-left: 1rem !important; padding-right: 1rem !important; }
+            .gap-8 { gap: 1rem !important; }
+            .gap-6 { gap: 0.75rem !important; }
+            .mb-8 { margin-bottom: 1rem !important; }
+            .py-8 { padding-top: 1rem !important; padding-bottom: 1rem !important; }
         }
         @media (max-width: 480px) {
             h1 { font-size: 1.75rem !important; }
             h2 { font-size: 1.5rem !important; }
+
+            /* Prevent iOS zoom on inputs */
+            input, select, textarea { font-size: 16px !important; }
+
+            /* Single column grids */
+            .grid-cols-2, .sm\:grid-cols-2 { grid-template-columns: 1fr !important; }
+            .lg\:grid-cols-4 { grid-template-columns: 1fr !important; }
+
+            /* Tight spacing */
+            .max-w-5xl, .max-w-7xl { padding-left: 0.75rem !important; padding-right: 0.75rem !important; }
+            .p-4 { padding: 0.75rem !important; }
+            .rounded-2xl { border-radius: 1rem !important; }
+        }
+        @media (max-width: 360px) {
+            .text-sm { font-size: 0.8rem !important; }
+            .text-xs { font-size: 0.7rem !important; }
+            .p-4 { padding: 0.5rem !important; }
         }
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
