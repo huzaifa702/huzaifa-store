@@ -2,15 +2,15 @@
 @section('title', 'Checkout')
 
 @section('content')
-<div class="max-w-5xl mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-8 animate-on-scroll">Checkout</h1>
+<div class="max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
+    <h1 class="text-2xl sm:text-3xl font-bold mb-4 sm:mb-8 animate-on-scroll">Checkout</h1>
 
     <form action="{{ route('checkout.process') }}" method="POST">
         @csrf
         <div class="grid lg:grid-cols-3 gap-8">
             <!-- Shipping Info -->
-            <div class="lg:col-span-2 space-y-6 animate-on-scroll">
-                <div class="bg-dark-900 rounded-2xl shadow-black/20 p-6">
+            <div class="lg:col-span-2 space-y-4 sm:space-y-6 animate-on-scroll">
+                <div class="bg-dark-900 rounded-2xl shadow-black/20 p-4 sm:p-6">
                     <h3 class="font-bold text-lg mb-4 flex items-center gap-2">📦 Shipping Information</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
@@ -45,7 +45,7 @@
                 </div>
 
                 <!-- Payment -->
-                <div class="bg-dark-900 rounded-2xl shadow-black/20 p-6">
+                <div class="bg-dark-900 rounded-2xl shadow-black/20 p-4 sm:p-6">
                     <h3 class="font-bold text-lg mb-4 flex items-center gap-2">💳 Payment Method</h3>
                     <div class="space-y-3" x-data="{ method: 'cod' }">
                         <label class="flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-all" :class="method === 'cod' ? 'bg-brand-50 border-2 border-brand-500' : 'bg-dark-800/50 border-2 border-transparent hover:bg-dark-800'">
@@ -66,7 +66,7 @@
                 </div>
 
                 <!-- Notes -->
-                <div class="bg-dark-900 rounded-2xl shadow-black/20 p-6">
+                <div class="bg-dark-900 rounded-2xl shadow-black/20 p-4 sm:p-6">
                     <h3 class="font-bold text-lg mb-4 flex items-center gap-2">📝 Order Notes</h3>
                     <textarea name="notes" rows="3" class="w-full px-4 py-3 bg-dark-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm" placeholder="Any special instructions...">{{ old('notes') }}</textarea>
                 </div>
@@ -74,7 +74,7 @@
 
             <!-- Order Summary -->
             <div class="lg:col-span-1">
-                <div class="bg-dark-900 rounded-2xl shadow-black/20 p-6 sticky top-24 animate-on-scroll">
+                <div class="bg-dark-900 rounded-2xl shadow-black/20 p-4 sm:p-6 lg:sticky lg:top-24 animate-on-scroll">
                     <h3 class="font-bold text-lg mb-4">Order Summary</h3>
                     <div class="space-y-3 mb-4">
                         @foreach($cart->items as $item)

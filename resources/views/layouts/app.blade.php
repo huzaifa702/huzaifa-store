@@ -606,7 +606,7 @@
                                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                                 </div>
                             </button>
-                            <div x-show="open" @click.outside="open=false" x-transition
+                            <div x-cloak x-show="open" @click.outside="open=false" x-transition
                                 class="absolute right-0 top-full mt-3 w-52 glass-card rounded-2xl shadow-2xl shadow-black/60 py-2 z-50">
                                 <a href="{{ route('profile.index') }}"
                                     class="block px-4 py-2.5 text-gray-300 hover:bg-brand-600/15 hover:text-brand-300 transition-all rounded-lg mx-2">My Profile</a>
