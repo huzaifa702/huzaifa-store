@@ -12,7 +12,7 @@ use App\Http\Controllers\Admin\ReportController;
 
 // Admin Auth (no middleware)
 Route::get('/login', [AuthController::class, 'loginForm'])->name('admin.login');
-Route::post('/login', [AuthController::class, 'login'])->name('admin.login.submit');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('admin.login.submit');
 
 // Protected Admin Routes
 Route::middleware('admin')->group(function () {

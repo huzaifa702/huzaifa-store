@@ -5,7 +5,7 @@
 @section('content')
 <div class="max-w-2xl">
     <a href="{{ route('admin.categories.index') }}" class="text-brand-600 text-sm font-semibold hover:underline mb-4 inline-block">← Back to Categories</a>
-    <div class="bg-slate-900 rounded-2xl shadow-black/20 p-4 sm:p-6 lg:p-8">
+    <div class="bg-slate-900 rounded-2xl shadow-black/20 p-8">
         <form action="{{ route('admin.categories.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
             @csrf
             <div>
@@ -21,7 +21,7 @@
                 <label class="block text-sm font-medium text-gray-300 mb-1">Image</label>
                 <input type="file" name="image" accept="image/*" class="w-full px-4 py-3 bg-slate-800 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-brand-50 file:text-brand-700 file:font-semibold">
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-1">Sort Order</label>
                     <input type="number" name="sort_order" value="{{ old('sort_order', 0) }}" class="w-full px-4 py-3 bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm">
@@ -33,9 +33,9 @@
                     </label>
                 </div>
             </div>
-            <div class="flex flex-col sm:flex-row gap-3">
+            <div class="flex gap-3">
                 <button type="submit" class="px-8 py-3 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all">Create Category</button>
-                <a href="{{ route('admin.categories.index') }}" class="px-8 py-3 bg-slate-800 text-gray-300 rounded-xl font-semibold hover:bg-gray-200 transition-colors text-center">Cancel</a>
+                <a href="{{ route('admin.categories.index') }}" class="px-8 py-3 bg-slate-800 text-gray-300 rounded-xl font-semibold hover:bg-gray-200 transition-colors">Cancel</a>
             </div>
         </form>
     </div>

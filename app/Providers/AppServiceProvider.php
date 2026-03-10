@@ -2,25 +2,33 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use App\Models\Category;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
+    /**
+     * Register any application services.
+     */
     public function register(): void
     {
         //
     }
 
+    /**
+     * Bootstrap any application services.
+     */
     public function boot(): void
     {
-        // Force HTTPS when not running locally
-        if (!app()->environment('local')) {
+        if (config('app.env') === 'production') {
             URL::forceScheme('https');
         }
 
-        // Force cookie session driver to prevent 419 CSRF errors
-        // Cookie sessions are most reliable on Railway/cloud platforms
-        config(['session.driver' => 'cookie']);
+        View::composer('layouts.app', function ($view) {
+            $view->with('navCategories', Category::where('is_active', true)
+                ->orderBy('sort_order')->get());
+        });
     }
 }

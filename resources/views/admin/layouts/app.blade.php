@@ -24,8 +24,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <style>
-        * { font-family: 'Inter', system-ui, sans-serif; box-sizing: border-box; }
-        html, body { overflow-x: hidden; }
+        * { font-family: 'Inter', system-ui, sans-serif; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #020617; }
         ::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 3px; }

@@ -105,7 +105,7 @@ class CheckoutController extends Controller
         $cart->items()->delete();
         $cart->delete();
 
-        try { ActivityLogService::log('order_placed', "Order {$order->order_number} placed", auth()->user(), $order); } catch (\Exception $e) { /* ignore */ }
+        ActivityLogService::log('order_placed', "Order {$order->order_number} placed", auth()->user(), $order);
 
         return redirect()->route('orders.show', $order)->with('success', 'Order placed successfully!');
     }

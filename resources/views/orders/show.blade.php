@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="max-w-5xl mx-auto px-4 py-8">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 animate-on-scroll">
+    <div class="flex items-center justify-between mb-8 animate-on-scroll">
         <div>
             <a href="{{ route('orders.index') }}" class="text-brand-600 text-sm font-semibold hover:underline">← Back to Orders</a>
             <h1 class="text-3xl font-bold mt-2">Order {{ $order->order_number }}</h1>
@@ -21,7 +21,7 @@
     <!-- Order Tracking -->
     <div class="bg-dark-900 rounded-2xl shadow-black/20 p-6 mb-8 animate-on-scroll">
         <h3 class="font-bold text-lg mb-6">Order Status</h3>
-        <div class="flex items-center justify-between relative overflow-x-auto pb-2">
+        <div class="flex items-center justify-between relative">
             @foreach(['pending', 'processing', 'shipped', 'delivered'] as $index => $status)
                 @php
                     $statuses = ['pending' => 0, 'processing' => 1, 'shipped' => 2, 'delivered' => 3, 'cancelled' => -1];
@@ -45,9 +45,9 @@
         @endif
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="grid lg:grid-cols-3 gap-8">
         <!-- Items -->
-        <div class="md:col-span-2">
+        <div class="lg:col-span-2">
             <div class="bg-dark-900 rounded-2xl shadow-black/20 p-6 animate-on-scroll">
                 <h3 class="font-bold text-lg mb-4">Order Items</h3>
                 <div class="space-y-4">

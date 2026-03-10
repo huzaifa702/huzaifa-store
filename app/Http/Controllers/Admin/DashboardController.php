@@ -15,10 +15,6 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // Today's stats
-        $todayRevenue = Order::where('status', '!=', 'cancelled')->whereDate('created_at', today())->sum('total');
-        $todayOrders = Order::whereDate('created_at', today())->count();
-
         $totalRevenue = Order::where('status', '!=', 'cancelled')->sum('total');
         $totalOrders = Order::count();
         $totalProducts = Product::count();
@@ -40,36 +36,18 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        try {
-            $recentActivities = ActivityLog::latest()->take(10)->get();
-        } catch (\Exception $e) {
-            $recentActivities = collect();
-        }
+        $recentActivities = ActivityLog::latest()->take(10)->get();
 
         $monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-        try {
-            $monthlySales = Order::where('status', '!=', 'cancelled')
-                ->selectRaw("MONTH(created_at) as month_num, SUM(total) as revenue, COUNT(*) as orders")
-                ->groupByRaw("MONTH(created_at)")
-                ->orderByRaw("MONTH(created_at)")
-                ->get()
-                ->map(function ($item) use ($monthNames) {
-                    $item->month = $monthNames[intval($item->month_num) - 1] ?? $item->month_num;
-                    return $item;
-                });
-        } catch (\Exception $e) {
-            $monthlySales = collect();
-        }
-
-        // Category product distribution
-        try {
-            $categoryDistribution = Category::where('is_active', true)
-                ->withCount('activeProducts')
-                ->get()
-                ->map(fn($c) => ['name' => $c->name, 'count' => $c->active_products_count]);
-        } catch (\Exception $e) {
-            $categoryDistribution = collect();
-        }
+        $monthlySales = Order::where('status', '!=', 'cancelled')
+            ->selectRaw("MONTH(created_at) as month_num, SUM(total) as revenue, COUNT(*) as orders")
+            ->groupByRaw("MONTH(created_at)")
+            ->orderByRaw("MONTH(created_at)")
+            ->get()
+            ->map(function ($item) use ($monthNames) {
+                $item->month = $monthNames[intval($item->month_num) - 1] ?? $item->month_num;
+                return $item;
+            });
 
         return view('admin.dashboard', compact(
             'totalRevenue',
@@ -82,10 +60,7 @@ class DashboardController extends Controller
             'recentOrders',
             'topProducts',
             'recentActivities',
-            'monthlySales',
-            'todayRevenue',
-            'todayOrders',
-            'categoryDistribution'
+            'monthlySales'
         ));
     }
 }

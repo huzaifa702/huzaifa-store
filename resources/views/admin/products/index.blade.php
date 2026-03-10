@@ -3,7 +3,7 @@
 @section('page-title', 'Products')
 
 @section('content')
-<div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+<div class="flex items-center justify-between mb-6">
     <div>
         <form action="{{ route('admin.products.index') }}" method="GET" class="flex gap-3 flex-wrap items-center">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products..." class="px-4 py-2 bg-slate-900 rounded-xl border border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 w-64 text-gray-200 placeholder-gray-500">
@@ -13,10 +13,7 @@
                     <option value="{{ $cat->id }}" {{ request('category') == $cat->id ? 'selected' : '' }}>{{ $cat->name }} ({{ $cat->products_count }})</option>
                 @endforeach
             </select>
-            <button type="submit" class="px-4 py-2 bg-brand-500 text-white rounded-xl text-sm font-semibold hover:bg-brand-600 transition-colors">Filter</button>
-            @if(request('search') || request('category'))
-                <a href="{{ route('admin.products.index') }}" class="px-4 py-2 bg-slate-700 text-gray-300 rounded-xl text-sm font-semibold hover:bg-slate-600 transition-colors">Clear</a>
-            @endif
+            <button type="submit" class="px-4 py-2 bg-brand-500 text-white rounded-xl text-sm font-semibold hover:bg-brand-600 transition-colors">Search</button>
         </form>
     </div>
     <div class="flex items-center gap-3">
@@ -111,7 +108,8 @@
             </tr>
             @endforeach
         </tbody>
-    </table>
+        </table>
+    </div>
 </div>
 <div class="mt-6">{{ $products->withQueryString()->links() }}</div>
 @endif

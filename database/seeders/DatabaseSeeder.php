@@ -14,31 +14,27 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create Admin (safe for re-runs)
-        Admin::firstOrCreate(
-            ['email' => 'mhuzaifa2503a@aptechorangi.com'],
-            [
-                'name' => 'M. Huzaifa',
-                'password' => Hash::make('M.HUZAIFA5566'),
-                'role' => 'super_admin',
-            ]
-        );
+        // Create Admin
+        Admin::create([
+            'name' => 'M. Huzaifa',
+            'email' => 'mhuzaifa2503a@aptechorangi.com',
+            'password' => Hash::make('M.HUZAIFA5566'),
+            'role' => 'super_admin',
+        ]);
 
-        // Create Test User (safe for re-runs)
-        User::firstOrCreate(
-            ['email' => 'user@test.com'],
-            [
-                'name' => 'Test User',
-                'password' => Hash::make('password'),
-                'phone' => '03001234567',
-                'address' => '123 Main Street',
-                'city' => 'Lahore',
-                'state' => 'Punjab',
-                'zip_code' => '54000',
-            ]
-        );
+        // Create Test User
+        User::create([
+            'name' => 'Test User',
+            'email' => 'user@test.com',
+            'password' => Hash::make('password'),
+            'phone' => '03001234567',
+            'address' => '123 Main Street',
+            'city' => 'Lahore',
+            'state' => 'Punjab',
+            'zip_code' => '54000',
+        ]);
 
-        // Create Categories — restore soft-deleted ones first
+        // Create Categories
         $categories = [
             ['name' => 'Electronics', 'slug' => 'electronics', 'description' => 'Latest electronic gadgets and devices', 'sort_order' => 1],
             ['name' => 'Fashion', 'slug' => 'fashion', 'description' => 'Trendy clothing and accessories', 'sort_order' => 2],
@@ -48,20 +44,8 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Beauty', 'slug' => 'beauty', 'description' => 'Skincare, makeup and beauty products', 'sort_order' => 6],
         ];
 
-        $categoryIds = []; // slug => id mapping
         foreach ($categories as $cat) {
-            // Restore if soft-deleted, otherwise create
-            $existing = Category::withTrashed()->where('slug', $cat['slug'])->first();
-            if ($existing) {
-                if ($existing->trashed()) {
-                    $existing->restore();
-                }
-                $existing->update(['is_active' => true]);
-                $categoryIds[$cat['slug']] = $existing->id;
-            } else {
-                $newCat = Category::create(array_merge($cat, ['is_active' => true]));
-                $categoryIds[$cat['slug']] = $newCat->id;
-            }
+            Category::create($cat);
         }
 
         // Create Products — 6+ per category = 36+ total
@@ -269,37 +253,16 @@ class DatabaseSeeder extends Seeder
             160, 161, 162, 163, 164, 165, 166, 167, 168,
         ];
 
-        // Map old hardcoded category_ids to actual database IDs
-        $catSlugs = ['electronics', 'fashion', 'home-living', 'sports', 'books', 'beauty'];
-        $catIdMap = [];
-        for ($i = 1; $i <= 6; $i++) {
-            $catIdMap[$i] = $categoryIds[$catSlugs[$i - 1]] ?? $i;
-        }
-
         foreach ($products as $index => $productData) {
-            // Remap the hardcoded category_id to the actual DB id
-            $productData['category_id'] = $catIdMap[$productData['category_id']] ?? $productData['category_id'];
-
-            // Restore soft-deleted product if exists
-            $existing = Product::withTrashed()->where('slug', $productData['slug'])->first();
-            if ($existing) {
-                if ($existing->trashed()) {
-                    $existing->restore();
-                }
-                $existing->update(['is_active' => true, 'category_id' => $productData['category_id']]);
-                $product = $existing;
-            } else {
-                $product = Product::create(array_merge($productData, ['is_active' => true]));
-            }
+            $product = Product::create($productData);
 
             $seed = $imageSeeds[$index] ?? ($index + 200);
-            ProductImage::firstOrCreate(
-                ['product_id' => $product->id, 'is_primary' => true],
-                [
-                    'image_path' => "https://picsum.photos/seed/{$seed}/600/600",
-                    'sort_order' => 0,
-                ]
-            );
+            ProductImage::create([
+                'product_id' => $product->id,
+                'image_path' => "https://picsum.photos/seed/{$seed}/600/600",
+                'is_primary' => true,
+                'sort_order' => 0,
+            ]);
         }
     }
 }

@@ -34,16 +34,5 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-    'google_ai' => [
-        'key' => env('GOOGLE_AI_API_KEY'),
-    ],
-
-    'elevenlabs' => [
-        'key' => env('ELEVENLABS_API_KEY'),
-    ],
-
-    'brevo' => [
-        'key' => env('BREVO_API_KEY'),
-    ],
 
 ];

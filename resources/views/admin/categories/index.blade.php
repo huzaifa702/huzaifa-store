@@ -21,7 +21,12 @@
             </div>
             <div>
                 <h3 class="font-bold text-gray-100">{{ $category->name }}</h3>
-                <p class="text-xs text-gray-400">{{ $category->products_count ?? 0 }} products</p>
+                <div class="flex items-center gap-2 mt-1">
+                    <p class="text-xs text-gray-400">{{ $category->products_count ?? 0 }} products</p>
+                    @if(($category->products_count ?? 0) === 0)
+                        <span class="px-2 py-0.5 bg-yellow-500/10 text-yellow-500 rounded-full text-[10px] font-bold tracking-wide uppercase">Empty</span>
+                    @endif
+                </div>
             </div>
         </div>
         @if($category->description)

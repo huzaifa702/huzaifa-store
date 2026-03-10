@@ -1,3 +1,4 @@
+@if(!Request::is('chatbot'))
 <!-- AI Agent Chatbot Widget -->
 <div x-data="aiAgent()" x-cloak style="display:none" class="fixed bottom-6 right-6 z-[100]">
     <!-- Chat Toggle Button -->
@@ -107,24 +108,23 @@
 
         <!-- Quick Actions -->
         <div class="px-3 pb-2 flex gap-1.5 flex-wrap" x-show="messages.length <= 2">
-            <button @click="sendQuick('Show deals')"
-                class="px-3 py-1.5 bg-dark-800 border border-white/5 rounded-full text-[11px] text-gray-400 hover:text-brand-400 hover:border-brand-500/30 transition-all">🔥
-                Deals</button>
-            <button @click="sendQuick('Show categories')"
-                class="px-3 py-1.5 bg-dark-800 border border-white/5 rounded-full text-[11px] text-gray-400 hover:text-brand-400 hover:border-brand-500/30 transition-all">🏷️
-                Categories</button>
             <button @click="sendQuick('What\'s popular?')"
                 class="px-3 py-1.5 bg-dark-800 border border-white/5 rounded-full text-[11px] text-gray-400 hover:text-brand-400 hover:border-brand-500/30 transition-all">⭐
                 Popular</button>
+            @php
+                $chatCategories = \App\Models\Category::has('products')->orderBy('name')->take(3)->get();
+            @endphp
+            @foreach($chatCategories as $cat)
+            <button @click="sendQuick('Show {{ $cat->name }}')"
+                class="px-3 py-1.5 bg-dark-800 border border-white/5 rounded-full text-[11px] text-gray-400 hover:text-brand-400 hover:border-brand-500/30 transition-all">🏷️
+                {{ $cat->name }}</button>
+            @endforeach
             <button @click="sendQuick('Track my order')"
                 class="px-3 py-1.5 bg-dark-800 border border-white/5 rounded-full text-[11px] text-gray-400 hover:text-brand-400 hover:border-brand-500/30 transition-all">📦
                 Orders</button>
             <button @click="showEmailInput = true"
                 class="px-3 py-1.5 bg-dark-800 border border-white/5 rounded-full text-[11px] text-gray-400 hover:text-brand-400 hover:border-brand-500/30 transition-all">📧
                 Get Deals</button>
-            <button @click="sendQuick('Help')"
-                class="px-3 py-1.5 bg-dark-800 border border-white/5 rounded-full text-[11px] text-gray-400 hover:text-brand-400 hover:border-brand-500/30 transition-all">❓
-                Help</button>
         </div>
 
         <!-- Email Input -->
@@ -144,9 +144,11 @@
         </div>
 
         <!-- Image Preview (staged image before sending) -->
-        <div x-show="stagedImage" x-transition class="px-3 pb-2">
+        <div x-cloak x-show="stagedImage && stagedImagePreview" x-transition class="px-3 pb-2">
             <div class="flex items-center gap-2 bg-dark-800 rounded-xl p-2 border border-brand-500/20">
-                <img :src="stagedImagePreview" class="w-12 h-12 rounded-lg object-cover" alt="Staged image">
+                <template x-if="stagedImagePreview">
+                    <img :src="stagedImagePreview" class="w-12 h-12 rounded-lg object-cover" alt="Staged image">
+                </template>
                 <span class="text-xs text-gray-400 flex-1">📸 Image ready — type a question or just send</span>
                 <button @click="clearStagedImage()" class="text-gray-500 hover:text-red-400 text-xs p-1">✕</button>
             </div>
@@ -213,7 +215,16 @@
             chatAbortController: null,
             ttsAbortController: null,
             messages: [
-                { sender: 'bot', text: "👋 Hi! I'm the **Huzaifa Store AI Agent** — powered by advanced AI.\n\nI can help you with:\n🛍️ Product search & deals\n🧠 Any question (I use AI!)\n📸 Image analysis\n🔊 Listen to responses\n📧 Email exclusive deals\n\nTry the buttons below or just ask!", products: [], source: 'bot' }
+                { sender: 'bot', text: `👋 Hi! I'm the **Huzaifa Store AI Agent**.
+
+Try asking: 'show me {{ \App\Models\Category::has('products')->first()?->name ?? 'popular' }} products' or 'find items under $50'.
+
+I can help with:
+🛍️ Product search & deals
+🧠 General shopping advice
+📸 Image analysis
+🔊 Audio responses
+📧 Exclusive deals`, products: [], source: 'bot' }
             ],
 
             toggle() { this.isOpen = !this.isOpen; },
@@ -360,10 +371,13 @@
 
             // ── Per-message TTS (ElevenLabs → browser fallback) ──
             async speakTTS(text, index) {
-                if (this.playingIndex === index && this.currentAudio) {
-                    this.currentAudio.pause();
-                    this.currentAudio.currentTime = 0;
-                    this.currentAudio = null;
+                if (this.playingIndex === index) {
+                    if (this.currentAudio) {
+                        this.currentAudio.pause();
+                        this.currentAudio.currentTime = 0;
+                        this.currentAudio = null;
+                    }
+                    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
                     this.playingIndex = -1;
                     return;
                 }
@@ -481,3 +495,4 @@
         };
     }
 </script>
+@endif
