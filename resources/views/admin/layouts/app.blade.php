@@ -22,12 +22,48 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <style>
         * { font-family: 'Inter', system-ui, sans-serif; box-sizing: border-box; }
         html, body { overflow-x: hidden; }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #020617; }
         ::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 3px; }
+
+        /* ===== ADMIN 3D ANIMATIONS & EFFECTS ===== */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        .glass-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 10px 40px -10px rgba(99, 102, 241, 0.15);
+            transform: translateY(-2px);
+        }
+        .card-3d {
+            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.6s ease;
+            transform-style: preserve-3d;
+        }
+        .card-3d:hover {
+            transform: translateY(-8px) scale(1.02) rotateX(2deg);
+            box-shadow: 0 25px 50px -15px rgba(99, 102, 241, 0.2);
+        }
+        .hover-rotate-3d {
+            transition: transform 0.6s ease;
+            transform: perspective(800px) rotateY(0deg);
+        }
+        .hover-rotate-3d:hover {
+            transform: perspective(800px) rotateY(6deg) scale(1.02);
+        }
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
 
         /* ===== ADMIN RESPONSIVE ===== */
 
@@ -216,5 +252,21 @@
     </div>
 
     @yield('scripts')
+
+    <!-- Admin Panel GSAP Animations -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof gsap !== 'undefined') {
+                gsap.from('.glass-card, .card-3d, .bg-slate-900', {
+                    y: 30,
+                    opacity: 0,
+                    duration: 0.6,
+                    stagger: 0.05,
+                    ease: 'power3.out',
+                    clearProps: 'all' // removes transform after so hover 3d works
+                });
+            }
+        });
+    </script>
 </body>
 </html>

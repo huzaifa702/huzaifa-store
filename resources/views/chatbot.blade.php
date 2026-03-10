@@ -77,6 +77,13 @@
 
             <!-- Input Area -->
             <div class="chatbot-input-area">
+                <!-- Floating Stop Bar (visible during generation) -->
+                <div id="stopBar" class="hidden chatbot-stop-bar">
+                    <button onclick="stopGeneration()" class="chatbot-stop-bar-btn">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+                        Stop generating
+                    </button>
+                </div>
                 <form id="chatForm" class="chatbot-input-form">
                     @csrf
                     <label for="imageUploadPage" class="chatbot-upload-btn" title="Upload Image">
@@ -89,8 +96,12 @@
                     <div class="flex-1 relative">
                         <input type="text" id="chatInput" placeholder="Ask me anything about products..." class="chatbot-text-input" autocomplete="off">
                     </div>
+                    <!-- Send button (transforms to Stop button during generation) -->
                     <button type="submit" id="sendBtn" class="chatbot-send-btn" title="Send">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                        <svg id="sendIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                    </button>
+                    <button type="button" id="stopBtn" class="chatbot-stop-btn hidden" onclick="stopGeneration()" title="Stop generating">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
                     </button>
                 </form>
                 <div id="imagePreview" class="hidden mt-3 flex items-center gap-3 bg-slate-800 rounded-xl p-3 border border-slate-700">
@@ -308,6 +319,52 @@
     .chatbot-send-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px -5px rgba(99, 102, 241, 0.5); }
     .chatbot-send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
+    /* Stop button (replaces send during generation) */
+    .chatbot-stop-btn {
+        width: 2.5rem; height: 2.5rem;
+        border-radius: 0.75rem;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        display: flex; align-items: center; justify-content: center;
+        color: white;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 15px -3px rgba(239, 68, 68, 0.4);
+        transition: all 0.2s;
+        flex-shrink: 0;
+        animation: stopPulse 1.5s ease-in-out infinite;
+    }
+    .chatbot-stop-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px -5px rgba(239, 68, 68, 0.5); }
+    @keyframes stopPulse {
+        0%, 100% { box-shadow: 0 4px 15px -3px rgba(239, 68, 68, 0.4); }
+        50% { box-shadow: 0 4px 25px -3px rgba(239, 68, 68, 0.7); }
+    }
+
+    /* Floating stop bar */
+    .chatbot-stop-bar {
+        display: flex;
+        justify-content: center;
+        padding: 0.5rem 0;
+        margin-bottom: 0.5rem;
+    }
+    .chatbot-stop-bar-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1.25rem;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        border-radius: 9999px;
+        color: #f87171;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .chatbot-stop-bar-btn:hover {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.5);
+    }
+
     /* Mic button */
     .chatbot-mic-btn {
         width: 2.5rem; height: 2.5rem;
@@ -472,15 +529,26 @@
 </style>
 
 <script>
+// Helper: always get CSRF token from meta tag (works on all browsers/mobile)
+function getCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta) return meta.getAttribute('content');
+    const input = document.querySelector('input[name="_token"]');
+    return input ? input.value : '';
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const chatMessages = document.getElementById('chatMessages');
     const chatForm = document.getElementById('chatForm');
     const chatInput = document.getElementById('chatInput');
     const imageUpload = document.getElementById('imageUploadPage');
+    const stopBtn = document.getElementById('stopBtn');
+    const stopBar = document.getElementById('stopBar');
     const imagePreview = document.getElementById('imagePreview');
     const previewImg = document.getElementById('previewImg');
     const sendBtn = document.getElementById('sendBtn');
     let selectedImage = null;
+    let isGenerating = false;
 
     // ── AbortController for real request cancellation ──
     let chatAbortController = null;
@@ -523,6 +591,23 @@ document.addEventListener('DOMContentLoaded', function() {
         sendTextMessage(text);
     };
 
+    // ── Show/hide generation UI ──
+    function setGenerating(state) {
+        isGenerating = state;
+        if (state) {
+            sendBtn.classList.add('hidden');
+            stopBtn.classList.remove('hidden');
+            stopBar.classList.remove('hidden');
+            chatInput.disabled = true;
+        } else {
+            sendBtn.classList.remove('hidden');
+            stopBtn.classList.add('hidden');
+            stopBar.classList.add('hidden');
+            sendBtn.disabled = false;
+            chatInput.disabled = false;
+        }
+    }
+
     // ── STOP GENERATION: Cancel fetch + stop audio ──
     window.stopGeneration = function() {
         if (chatAbortController) {
@@ -540,15 +625,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         removeTyping();
-        sendBtn.disabled = false;
-        // Remove any stop buttons
+        setGenerating(false);
+        // Remove any inline stop buttons
         document.querySelectorAll('.stop-gen-btn').forEach(b => b.remove());
     };
 
     async function sendTextMessage(message) {
         appendUserMessage(message);
         chatInput.value = '';
-        sendBtn.disabled = true;
+        setGenerating(true);
         showTyping();
 
         // Create AbortController
@@ -557,7 +642,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const res = await fetch('/chatbot/chat', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('input[name=_token]').value },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrfToken() },
                 body: JSON.stringify({ message }),
                 signal: chatAbortController.signal
             });
@@ -574,20 +659,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 appendBotMessage({ reply: 'Sorry, something went wrong. Please try again.', type: 'text' });
             }
         }
-        sendBtn.disabled = false;
+        setGenerating(false);
     }
 
     async function sendImageMessage(message) {
         appendUserMessage(message || '📸 Analyzing image...', true);
         chatInput.value = '';
-        sendBtn.disabled = true;
+        setGenerating(true);
         showTyping();
 
         chatAbortController = new AbortController();
         const formData = new FormData();
         formData.append('image', selectedImage);
         if (message) formData.append('message', message);
-        formData.append('_token', document.querySelector('input[name=_token]').value);
+        formData.append('_token', getCsrfToken());
 
         try {
             const res = await fetch('/chatbot/image-search', {
@@ -609,7 +694,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         clearImage();
-        sendBtn.disabled = false;
+        setGenerating(false);
     }
 
     function appendUserMessage(text, hasImage = false) {
@@ -731,7 +816,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const res = await fetch('/chatbot/tts', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('input[name=_token]').value },
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrfToken() },
                 body: JSON.stringify({ text }),
                 signal: ttsAbortController.signal
             });
@@ -825,7 +910,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('input[name=_token]').value
+                    'X-CSRF-TOKEN': getCsrfToken()
                 },
                 body: JSON.stringify({ email: email, type: emailType.value })
             });

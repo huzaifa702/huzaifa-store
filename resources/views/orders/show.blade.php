@@ -9,9 +9,12 @@
             <h1 class="text-3xl font-bold mt-2">Order {{ $order->order_number }}</h1>
             <p class="text-gray-400 text-sm mt-1">Placed on {{ $order->created_at->format('F d, Y \a\t h:i A') }}</p>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             <span class="px-4 py-2 rounded-xl text-sm font-bold {{ $order->status_badge }}">{{ ucfirst($order->status) }}</span>
-            <a href="{{ route('orders.invoice', $order) }}" class="px-4 py-2 bg-dark-800 hover:bg-gray-200 rounded-xl text-sm font-semibold transition-colors">📄 Download Invoice</a>
+            <a href="{{ route('orders.invoice', $order) }}"
+               class="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 sm:py-2 bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-brand-500/20 hover:shadow-brand-500/40">
+                📄 Download Invoice
+            </a>
         </div>
     </div>
 

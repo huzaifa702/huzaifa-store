@@ -64,6 +64,9 @@ class HomeController extends Controller
                         'desc' => $cat->description ?? 'Explore our ' . e($cat->name) . ' collection.',
                         'image' => 'https://picsum.photos/seed/' . $cat->slug . '/500/500',
                         'category_slug' => $cat->slug,
+                        'price' => null,
+                        'original_price' => null,
+                        'product_url' => null,
                     ];
                 } else {
                     // One slide per product in this category
@@ -74,6 +77,9 @@ class HomeController extends Controller
                             'desc' => $cat->description ?? 'Explore our ' . e($cat->name) . ' collection.',
                             'image' => $product->primary_image_url ?: 'https://picsum.photos/seed/' . $cat->slug . '/500/500',
                             'category_slug' => $cat->slug,
+                            'price' => $product->sale_price ?? $product->price,
+                            'original_price' => $product->sale_price ? $product->price : null,
+                            'product_url' => route('products.show', $product),
                         ];
                     }
                 }

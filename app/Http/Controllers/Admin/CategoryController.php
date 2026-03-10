@@ -39,11 +39,18 @@ class CategoryController extends Controller
         try {
             $slug = Str::slug($request->name);
 
-            // If a soft-deleted category with the same slug exists, force-delete it
-            // This prevents "Duplicate entry" errors when re-creating a previously deleted category
-            $trashedCategory = Category::onlyTrashed()->where('slug', $slug)->first();
-            if ($trashedCategory) {
-                $trashedCategory->forceDelete();
+            // Force-delete ALL trashed categories with the same slug
+            // This fully removes the unique constraint blocker
+            $trashedWithSlug = Category::onlyTrashed()->where('slug', $slug)->get();
+            foreach ($trashedWithSlug as $trashed) {
+                /** @var Category $trashed */
+                $trashed->forceDelete();
+            }
+
+            // If a NON-trashed category with the same slug already exists, alter the slug slightly
+            $existingCount = Category::where('slug', $slug)->count();
+            if ($existingCount > 0) {
+                $slug = $slug . '-' . ($existingCount + 1);
             }
 
             $data = [
@@ -141,12 +148,12 @@ class CategoryController extends Controller
     public function destroy(Category $category)
     {
         try {
-            // Soft-delete all products in this category
+            // Soft-delete all products in this category first
             $productCount = 0;
             try {
                 $productCount = $category->products()->count();
                 if ($productCount > 0) {
-                    $category->products()->delete();
+                    $category->products()->delete(); // soft-delete so they can be restored
                 }
             } catch (\Exception $e) { /* ignore */ }
 
@@ -159,10 +166,11 @@ class CategoryController extends Controller
 
             // Log activity
             try {
-                ActivityLogService::log('category_deleted', "Category '{$category->name}' deleted ({$productCount} products removed)", null, $category);
+                ActivityLogService::log('category_deleted', "Category '{$category->name}' force deleted ({$productCount} products removed)", null, $category);
             } catch (\Exception $e) { /* ignore */ }
 
-            $category->delete();
+            // Force-delete so slug is fully released and can be reused
+            $category->forceDelete();
 
             return redirect()->route('admin.categories.index')->with('success', "Category deleted successfully! ({$productCount} products also removed)");
         } catch (\Exception $e) {

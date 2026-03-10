@@ -52,10 +52,16 @@
                                 x-text="slide.badge"></span>
                             <h1 class="text-4xl md:text-6xl font-black leading-tight" x-html="slide.title"></h1>
                             <p class="text-lg text-gray-400 max-w-md leading-relaxed mt-4" x-text="slide.desc"></p>
-                            <div class="flex gap-4 mt-8">
-                                <a href="{{ route('products.index') }}"
+                            <!-- Price display -->
+                            <div x-show="slide.price" class="mt-4 flex items-center gap-3">
+                                <span class="text-2xl font-black text-white" x-text="slide.price ? '$' + parseFloat(slide.price).toFixed(2) : ''"></span>
+                                <span x-show="slide.original_price && slide.original_price != slide.price" class="text-lg text-gray-500 line-through" x-text="slide.original_price ? '$' + parseFloat(slide.original_price).toFixed(2) : ''"></span>
+                                <span x-show="slide.original_price && slide.original_price != slide.price" class="px-2 py-0.5 bg-red-500/20 text-red-400 rounded-full text-xs font-bold">SALE</span>
+                            </div>
+                            <div class="flex gap-4 mt-6">
+                                <a :href="slide.product_url || '{{ route('products.index') }}'"
                                     class="px-8 py-3.5 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 transform hover:scale-105 transition-all duration-300 btn-glow">
-                                    Shop Now →
+                                    <span x-text="slide.product_url ? 'View Product →' : 'Shop Now →'"></span>
                                 </a>
                                 <a href="{{ route('products.index') }}?sort=newest"
                                     class="px-8 py-3.5 border border-white/10 text-white rounded-xl font-semibold hover:bg-white/5 transition-all duration-300 backdrop-blur-sm">
@@ -76,10 +82,16 @@
                             x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100"
                             x-transition:leave-end="opacity-0 transform scale-90"
                             class="absolute inset-0 flex items-center justify-center">
-                            <div class="w-80 h-80 mx-auto rounded-3xl overflow-hidden shadow-2xl shadow-brand-500/20 ring-1 ring-white/[0.08] card-3d"
-                                @mousemove="tilt3D($event, $el)" @mouseleave="resetTilt($el)">
-                                <img :src="slide.image" :alt="slide.badge" class="w-full h-full object-cover"
-                                    loading="lazy">
+                            <div class="relative">
+                                <div class="w-80 h-80 mx-auto rounded-3xl overflow-hidden shadow-2xl shadow-brand-500/20 ring-1 ring-white/[0.08] card-3d"
+                                    @mousemove="tilt3D($event, $el)" @mouseleave="resetTilt($el)">
+                                    <img :src="slide.image" :alt="slide.badge" class="w-full h-full object-cover"
+                                        loading="lazy">
+                                    <!-- Category overlay on image -->
+                                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                                        <span class="text-sm font-bold text-white" x-text="slide.badge"></span>
+                                    </div>
+                                </div>
                             </div>
                             <div
                                 class="absolute -inset-8 bg-gradient-to-r from-brand-500/10 via-neon-cyan/5 to-neon-purple/10 rounded-full blur-3xl -z-10 animate-float-slow">
@@ -90,13 +102,24 @@
             </div>
         </div>
 
-        <!-- Slider Dots -->
-        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-            <template x-for="(slide, index) in slides" :key="'dot'+index">
-                <button @click="goTo(index)" class="transition-all duration-300 rounded-full"
-                    :class="current === index ? 'w-8 h-2.5 bg-gradient-to-r from-brand-400 to-neon-cyan' : 'w-2.5 h-2.5 bg-white/20 hover:bg-white/40'">
-                </button>
-            </template>
+        <!-- Navigation Arrows -->
+        <button @click="prev()" class="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-all hover:scale-110 border border-white/10">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        </button>
+        <button @click="next()" class="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-all hover:scale-110 border border-white/10">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+
+        <!-- Slider Controls: Dots + Counter -->
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 z-20">
+            <span class="text-sm text-white/60 font-medium" x-text="(current + 1) + ' / ' + slides.length"></span>
+            <div class="flex gap-2">
+                <template x-for="(slide, index) in slides" :key="'dot'+index">
+                    <button @click="goTo(index)" class="transition-all duration-300 rounded-full"
+                        :class="current === index ? 'w-8 h-2.5 bg-gradient-to-r from-brand-400 to-neon-cyan' : 'w-2.5 h-2.5 bg-white/20 hover:bg-white/40'">
+                    </button>
+                </template>
+            </div>
         </div>
     </section>
 
@@ -413,9 +436,18 @@
         function heroSlider() {
             return {
                 current: 0,
+                autoSlideInterval: null,
                 slides: @json($heroSlides),
-                startAutoSlide() { setInterval(() => { this.current = (this.current + 1) % this.slides.length; }, 5000); },
-                goTo(index) { this.current = index; },
+                startAutoSlide() {
+                    this.autoSlideInterval = setInterval(() => { this.next(); }, 3500);
+                },
+                resetAutoSlide() {
+                    if (this.autoSlideInterval) clearInterval(this.autoSlideInterval);
+                    this.startAutoSlide();
+                },
+                next() { this.current = (this.current + 1) % this.slides.length; },
+                prev() { this.current = (this.current - 1 + this.slides.length) % this.slides.length; this.resetAutoSlide(); },
+                goTo(index) { this.current = index; this.resetAutoSlide(); },
                 tilt3D(e, el) {
                     const rect = el.getBoundingClientRect();
                     const x = ((e.clientX - rect.left) / rect.width - 0.5) * 20;
