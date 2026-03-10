@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class CategoryController extends Controller
@@ -31,13 +32,8 @@ class CategoryController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
-        $data = [
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'description' => $request->description,
-            'is_active' => $request->boolean('is_active', true),
-            'sort_order' => $request->input('sort_order', 0),
-        ];
+        try {
+            $slug = Str::slug($request->name);
 
             // Force-delete ALL trashed categories with the same slug
             // This fully removes the unique constraint blocker
@@ -77,12 +73,6 @@ class CategoryController extends Controller
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'Failed to create category: ' . $e->getMessage());
         }
-
-        $category = Category::create($data);
-
-        ActivityLogService::log('category_created', "Category '{$category->name}' created", null, $category);
-
-        return redirect()->route('admin.categories.index')->with('success', 'Category created successfully!');
     }
 
     public function edit(Category $category)
@@ -109,10 +99,10 @@ class CategoryController extends Controller
         ];
 
         if ($request->hasFile('image')) {
-            $upload = cloudinary()->upload($request->file('image')->getRealPath(), [
-                'folder' => 'huzaifa-store/categories'
-            ]);
-            $data['image'] = $upload->getSecurePath();
+            if ($category->image && Storage::disk('public')->exists($category->image)) {
+                Storage::disk('public')->delete($category->image);
+            }
+            $data['image'] = $request->file('image')->store('categories', 'public');
         }
 
         $category->update($data);

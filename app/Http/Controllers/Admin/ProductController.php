@@ -70,12 +70,10 @@ class ProductController extends Controller
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $index => $image) {
-                $upload = cloudinary()->upload($image->getRealPath(), [
-                    'folder' => 'huzaifa-store/products'
-                ]);
+                $path = $image->store('products', 'public');
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'image_path' => $upload->getSecurePath(),
+                    'image_path' => $path,
                     'is_primary' => $index === 0,
                     'sort_order' => $index,
                 ]);
@@ -130,12 +128,10 @@ class ProductController extends Controller
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $index => $image) {
-                $upload = cloudinary()->upload($image->getRealPath(), [
-                    'folder' => 'huzaifa-store/products'
-                ]);
+                $path = $image->store('products', 'public');
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'image_path' => $upload->getSecurePath(),
+                    'image_path' => $path,
                     'is_primary' => $product->images()->count() === 0 && $index === 0,
                     'sort_order' => $product->images()->count() + $index,
                 ]);
