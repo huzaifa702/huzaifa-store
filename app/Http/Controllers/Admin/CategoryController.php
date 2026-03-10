@@ -143,10 +143,5 @@ class CategoryController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Failed to delete category: ' . $e->getMessage());
         }
-
-        ActivityLogService::log('category_deleted', "Category '{$category->name}' deleted along with its products", null, $category);
-        $category->delete();
-
-        return redirect()->route('admin.categories.index')->with('success', 'Category and its associated products deleted successfully!');
     }
 }
