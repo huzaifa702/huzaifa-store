@@ -22,6 +22,19 @@ Route::post('/chatbot/tts', [ChatbotController::class, 'synthesizeSpeech'])->nam
 Route::post('/chatbot/email', [ChatbotController::class, 'sendEmail'])->name('chatbot.email');
 
 // Homepage
+Route::get('/debug-home', function() {
+    try {
+        $controller = new \App\Http\Controllers\HomeController();
+        return $controller->index();
+    } catch (\Throwable $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine(),
+            'trace' => collect($e->getTrace())->take(5)->map(fn($t) => ($t['file'] ?? '?') . ':' . ($t['line'] ?? '?') . ' ' . ($t['class'] ?? '') . ($t['type'] ?? '') . ($t['function'] ?? ''))->toArray(),
+        ]);
+    }
+});
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Products

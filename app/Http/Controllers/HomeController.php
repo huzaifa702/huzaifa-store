@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Category;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
@@ -107,6 +107,7 @@ class HomeController extends Controller
 
             return view('home', compact('featuredProducts', 'categories', 'categoriesWithProducts', 'latestProducts', 'saleProducts', 'heroSlides', 'productCount', 'categoryCount'));
         } catch (\Exception $e) {
+            Log::error('HomeController error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine());
             // Fallback: show home page with empty data if DB query fails
             return view('home', [
                 'featuredProducts' => collect(),
