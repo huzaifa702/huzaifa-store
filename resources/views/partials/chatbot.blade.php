@@ -1,6 +1,6 @@
 @if(!Request::is('chatbot'))
 <!-- AI Agent Chatbot Widget -->
-<div x-data="aiAgent()" x-cloak style="display:none" class="fixed bottom-6 right-6 z-[100]">
+<div x-data="aiAgent()" x-cloak class="fixed bottom-6 right-6 z-[100]">
     <!-- Chat Toggle Button -->
     <button @click="toggle()"
         class="relative w-16 h-16 bg-gradient-to-br from-brand-500 via-brand-600 to-neon-cyan rounded-2xl shadow-2xl shadow-brand-500/40 flex items-center justify-center text-white hover:scale-110 transition-all duration-500 group"
