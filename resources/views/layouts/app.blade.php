@@ -848,7 +848,7 @@
     @include('partials.chatbot')
 
     <!-- Vanilla Tilt 3D Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js" integrity="sha512-wC/cunGGDjXSl9OHweO0RuZgO53SXR5t9P5HIfwP1y07T12Z2gJ/CZeYaZf2QGfG1XyvH1pQ20Wz70nJ9C4h2A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             if(window.VanillaTilt) {
