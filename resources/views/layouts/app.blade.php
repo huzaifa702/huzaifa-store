@@ -71,6 +71,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
     <style>
+        [x-cloak] { display: none !important; }
+
         * {
             font-family: 'Inter', system-ui, sans-serif;
             box-sizing: border-box;
@@ -551,7 +553,7 @@
                                     d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
-                        <div x-show="open" x-transition:enter="transition ease-out duration-200"
+                        <div x-cloak x-show="open" x-transition:enter="transition ease-out duration-200"
                             x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
                             class="absolute top-full left-0 pt-3 w-56 z-50">
                             <div class="glass-card rounded-2xl shadow-2xl shadow-black/60 py-2">
@@ -562,6 +564,10 @@
                             </div>
                         </div>
                     </div>
+                    <a href="{{ route('chatbot.page') }}"
+                        class="text-gray-300 hover:text-white font-medium transition-colors nav-link-anim flex items-center gap-1">
+                        <span>🤖</span> AI Agent
+                    </a>
                 </div>
 
                 <!-- Search + Icons -->
@@ -633,7 +639,7 @@
         </div>
 
         <!-- Mobile Menu -->
-        <div x-show="mobileMenu" x-transition:enter="transition ease-out duration-300"
+        <div x-cloak x-show="mobileMenu" x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0 -translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
             x-transition:leave="transition ease-in duration-200"
             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0 -translate-y-4"
@@ -650,6 +656,7 @@
                     <a href="{{ route('categories.show', $cat) }}" class="block py-2 text-gray-400 hover:text-brand-400 transition-colors text-sm pl-2">{{ $cat->name }}</a>
                 @endforeach
             </div>
+            <a href="{{ route('chatbot.page') }}" class="block py-2.5 text-gray-300 font-medium hover:text-brand-400 transition-colors">🤖 AI Agent</a>
             <a href="{{ route('cart.index') }}" class="block py-2.5 text-gray-300 font-medium hover:text-brand-400 transition-colors">Cart</a>
             @auth
                 <a href="{{ route('profile.index') }}" class="block py-2.5 text-gray-300 font-medium hover:text-brand-400 transition-colors">Profile</a>
