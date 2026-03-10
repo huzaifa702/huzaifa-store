@@ -63,22 +63,22 @@
                 </div>
             </div>
 
-            <!-- Quick Actions -->
+            <!-- Quick Actions (Dynamic from Admin Panel categories) -->
             <div class="chatbot-quick-actions">
                 <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                    <button onclick="sendQuickMessage('Show featured products')" class="quick-action-btn">⭐ Featured Products</button>
-                    <button onclick="sendQuickMessage('Show electronics')" class="quick-action-btn">💻 Electronics</button>
-                    <button onclick="sendQuickMessage('Show fashion')" class="quick-action-btn">👗 Fashion</button>
+                    <button onclick="sendQuickMessage('Show featured products')" class="quick-action-btn">⭐ Featured</button>
+                    @foreach($categories->take(4) as $cat)
+                        <button onclick="sendQuickMessage('Show {{ $cat->name }} products')" class="quick-action-btn">{{ $cat->name }}</button>
+                    @endforeach
                     <button onclick="sendQuickMessage('Show deals and offers')" class="quick-action-btn">🏷️ Hot Deals</button>
                     <button onclick="sendQuickMessage('What categories do you have?')" class="quick-action-btn">📂 Categories</button>
-                    <button onclick="sendQuickMessage('Show best selling products')" class="quick-action-btn">🔥 Best Sellers</button>
                 </div>
             </div>
 
             <!-- Input Area -->
             <div class="chatbot-input-area">
-                <!-- Floating Stop Bar (visible during generation) -->
-                <div id="stopBar" class="hidden chatbot-stop-bar">
+                <!-- Floating Stop Bar (visible ONLY during generation) -->
+                <div id="stopBar" style="display:none" class="chatbot-stop-bar">
                     <button onclick="stopGeneration()" class="chatbot-stop-bar-btn">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
                         Stop generating
@@ -94,13 +94,13 @@
                         <span id="micIcon">🎤</span>
                     </button>
                     <div class="flex-1 relative">
-                        <input type="text" id="chatInput" placeholder="Ask me anything about products..." class="chatbot-text-input" autocomplete="off">
+                        <input type="text" id="chatInput" placeholder="Ask anything — code, math, products, general knowledge..." class="chatbot-text-input" autocomplete="off">
                     </div>
                     <!-- Send button (transforms to Stop button during generation) -->
                     <button type="submit" id="sendBtn" class="chatbot-send-btn" title="Send">
                         <svg id="sendIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                     </button>
-                    <button type="button" id="stopBtn" class="chatbot-stop-btn hidden" onclick="stopGeneration()" title="Stop generating">
+                    <button type="button" id="stopBtn" style="display:none" class="chatbot-stop-btn" onclick="stopGeneration()" title="Stop generating">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
                     </button>
                 </form>
@@ -595,14 +595,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function setGenerating(state) {
         isGenerating = state;
         if (state) {
-            sendBtn.classList.add('hidden');
-            stopBtn.classList.remove('hidden');
-            stopBar.classList.remove('hidden');
+            sendBtn.style.display = 'none';
+            stopBtn.style.display = '';
+            stopBar.style.display = '';
             chatInput.disabled = true;
         } else {
-            sendBtn.classList.remove('hidden');
-            stopBtn.classList.add('hidden');
-            stopBar.classList.add('hidden');
+            sendBtn.style.display = '';
+            stopBtn.style.display = 'none';
+            stopBar.style.display = 'none';
             sendBtn.disabled = false;
             chatInput.disabled = false;
         }
@@ -729,11 +729,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     `).join('')}
                 </div>`;
         } else {
-            const formattedText = replyText
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\n/g, '<br>')
-                .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-brand-400 hover:text-brand-300 underline">$1</a>');
-            content = `<p class="text-gray-200 text-sm leading-relaxed">${formattedText}</p>`;
+            // Enhanced markdown rendering with code blocks support
+            let formatted = replyText;
+            // Code blocks: ```lang\ncode\n``` → styled pre/code
+            formatted = formatted.replace(/```(\w*)\n?([\s\S]*?)```/g, function(m, lang, code) {
+                return '<div style="margin:8px 0;border-radius:8px;overflow:hidden;border:1px solid rgba(99,102,241,0.2)">' +
+                    '<div style="background:rgba(99,102,241,0.15);padding:4px 10px;font-size:11px;color:#818cf8;font-weight:600">' + (lang || 'code') + '</div>' +
+                    '<pre style="background:rgba(15,23,42,0.8);padding:12px;margin:0;overflow-x:auto;font-size:13px;line-height:1.5"><code style="color:#e2e8f0;font-family:monospace;white-space:pre">' + escapeHtml(code.trim()) + '</code></pre>' +
+                    '</div>';
+            });
+            // Inline code: `code`
+            formatted = formatted.replace(/`([^`]+)`/g, '<code style="background:rgba(99,102,241,0.15);padding:2px 6px;border-radius:4px;font-size:0.85em;color:#a5b4fc;font-family:monospace">$1</code>');
+            // Bold
+            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // Italic
+            formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            // Links
+            formatted = formatted.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" class="text-brand-400 hover:text-brand-300 underline" target="_blank">$1</a>');
+            // Line breaks
+            formatted = formatted.replace(/\n/g, '<br>');
+            content = `<div class="text-gray-200 text-sm leading-relaxed">${formatted}</div>`;
         }
 
         // Listen button

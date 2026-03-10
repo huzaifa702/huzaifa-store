@@ -23,7 +23,8 @@ class ChatbotController extends Controller
      */
     public function page()
     {
-        return view('chatbot');
+        $categories = Category::where('is_active', true)->withCount('activeProducts')->get();
+        return view('chatbot', compact('categories'));
     }
 
     /**
