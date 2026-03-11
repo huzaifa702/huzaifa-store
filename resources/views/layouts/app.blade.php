@@ -614,18 +614,13 @@
                         <form action="{{ route('search') }}" method="GET" class="hidden md:flex items-center">
                             <div class="relative">
                                 <input type="text" name="q" placeholder="Search products..."
-                                    class="w-64 pl-10 pr-10 py-2 bg-dark-800/60 border border-white/[0.06] rounded-xl text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/30 transition-all">
+                                    class="w-64 pl-4 pr-10 py-2 bg-dark-800/60 border border-white/[0.06] rounded-xl text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/30 transition-all">
                                 <button type="submit" class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-brand-400 transition-colors rounded-lg hover:bg-white/[0.06]" title="Search">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                 </button>
-                                <svg class="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
                             </div>
                         </form>
                     </div>
