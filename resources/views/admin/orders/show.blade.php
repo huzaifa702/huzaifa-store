@@ -57,6 +57,15 @@
             </form>
         </div>
 
+        <!-- Delete Order -->
+        <div class="bg-slate-900 rounded-2xl shadow-black/20 p-6">
+            <h3 class="font-bold mb-3 text-red-400">⚠️ Danger Zone</h3>
+            <form action="{{ route('admin.orders.destroy', $order) }}" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete this order? Stock will be restored if applicable.')">
+                @csrf @method('DELETE')
+                <button type="submit" class="w-full py-2.5 bg-red-500/10 text-red-400 rounded-xl text-sm font-semibold hover:bg-red-500/20 transition-colors">🗑 Delete Order</button>
+            </form>
+        </div>
+
         <!-- Customer -->
         <div class="bg-slate-900 rounded-2xl shadow-black/20 p-6">
             <h3 class="font-bold mb-3">👤 Customer</h3>

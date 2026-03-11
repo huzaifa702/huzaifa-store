@@ -39,7 +39,13 @@
                 </td>
                 <td class="px-6 py-4 text-sm text-gray-500">{{ $order->created_at->format('M d, Y') }}</td>
                 <td class="px-6 py-4 text-right">
-                    <a href="{{ route('admin.orders.show', $order) }}" class="px-3 py-1 bg-brand-50 text-brand-600 rounded-lg text-xs font-semibold hover:bg-brand-100 transition-colors">View</a>
+                    <div class="flex items-center justify-end gap-2">
+                        <a href="{{ route('admin.orders.show', $order) }}" class="px-3 py-1 bg-brand-50 text-brand-600 rounded-lg text-xs font-semibold hover:bg-brand-100 transition-colors">View</a>
+                        <form action="{{ route('admin.orders.destroy', $order) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this order? Stock will be restored if applicable.')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="px-3 py-1 bg-red-500/10 text-red-400 rounded-lg text-xs font-semibold hover:bg-red-500/20 transition-colors">Delete</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             @endforeach

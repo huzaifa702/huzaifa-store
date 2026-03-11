@@ -54,4 +54,36 @@ class OrderController extends Controller
 
         return back()->with('success', 'Order status updated successfully!');
     }
+
+    public function destroy(Order $order)
+    {
+        $orderNumber = $order->order_number;
+
+        // Restore stock if the order wasn't already cancelled
+        if ($order->status !== 'cancelled') {
+            foreach ($order->items as $item) {
+                if ($item->product) {
+                    $item->product->increment('stock', $item->quantity);
+                }
+            }
+        }
+
+        // Delete order items and payment
+        $order->items()->delete();
+        if ($order->payment) {
+            $order->payment->delete();
+        }
+
+        // Soft delete the order
+        $order->delete();
+
+        ActivityLogService::log(
+            'order_deleted',
+            "Order {$orderNumber} was deleted",
+            null,
+            null
+        );
+
+        return redirect()->route('admin.orders.index')->with('success', "Order {$orderNumber} has been deleted successfully.");
+    }
 }

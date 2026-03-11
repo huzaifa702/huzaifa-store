@@ -34,7 +34,13 @@
                 <td class="px-6 py-4 text-sm font-semibold">{{ $user->orders_count }}</td>
                 <td class="px-6 py-4 text-sm text-gray-500">{{ $user->created_at->format('M d, Y') }}</td>
                 <td class="px-6 py-4 text-right">
-                    <a href="{{ route('admin.users.show', $user) }}" class="px-3 py-1 bg-brand-50 text-brand-600 rounded-lg text-xs font-semibold hover:bg-brand-100 transition-colors">View</a>
+                    <div class="flex items-center justify-end gap-2">
+                        <a href="{{ route('admin.users.show', $user) }}" class="px-3 py-1 bg-brand-50 text-brand-600 rounded-lg text-xs font-semibold hover:bg-brand-100 transition-colors">View</a>
+                        <form action="{{ route('admin.users.destroy', $user) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this customer? Their pending orders will be cancelled.')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="px-3 py-1 bg-red-500/10 text-red-400 rounded-lg text-xs font-semibold hover:bg-red-500/20 transition-colors">Delete</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             @endforeach

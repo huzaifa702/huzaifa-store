@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -30,5 +31,25 @@ class UserController extends Controller
         $totalSpent = $user->orders()->where('status', '!=', 'cancelled')->sum('total');
 
         return view('admin.users.show', compact('user', 'totalSpent'));
+    }
+
+    public function destroy(User $user)
+    {
+        $userName = $user->name;
+
+        // Cancel any pending/processing orders
+        $user->orders()->whereIn('status', ['pending', 'processing'])->update(['status' => 'cancelled']);
+
+        // Soft delete the user
+        $user->delete();
+
+        ActivityLogService::log(
+            'user_deleted',
+            "Customer '{$userName}' was deleted",
+            null,
+            null
+        );
+
+        return redirect()->route('admin.users.index')->with('success', "Customer '{$userName}' has been deleted successfully.");
     }
 }

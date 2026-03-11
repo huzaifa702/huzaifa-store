@@ -29,6 +29,11 @@
             @if($user->address)<p><span class="text-gray-400">Address:</span> {{ $user->address }}</p>@endif
             @if($user->city)<p><span class="text-gray-400">City:</span> {{ $user->city }}, {{ $user->state }} {{ $user->zip_code }}</p>@endif
         </div>
+
+        <form action="{{ route('admin.users.destroy', $user) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this customer? Their pending orders will be cancelled.')" class="mt-6">
+            @csrf @method('DELETE')
+            <button type="submit" class="w-full py-2.5 bg-red-500/10 text-red-400 rounded-xl text-sm font-semibold hover:bg-red-500/20 transition-colors">🗑 Delete Customer</button>
+        </form>
     </div>
 
     <!-- Orders -->
