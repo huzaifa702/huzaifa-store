@@ -52,16 +52,27 @@
                     <textarea name="description" rows="4" class="w-full px-4 py-3 bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-400 text-sm">{{ old('description', $product->description) }}</textarea>
                 </div>
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-300 mb-1">Add More Images</label>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-sm font-medium text-gray-300">Add or Replace Images</label>
+                        @if($product->images->count())
+                            <label class="flex items-center gap-2 cursor-pointer bg-red-500/10 text-red-400 px-3 py-1 rounded-lg hover:bg-red-500/20 transition-colors">
+                                <input type="checkbox" name="replace_images" value="1" class="text-red-500 focus:ring-red-500 rounded">
+                                <span class="text-xs font-semibold">Replace all existing images with new uploads</span>
+                            </label>
+                        @endif
+                    </div>
                     <input type="file" name="images[]" multiple accept="image/*" class="w-full px-4 py-3 bg-slate-800 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-brand-50 file:text-brand-700 file:font-semibold">
                     @if($product->images->count())
                     <div class="flex gap-2 mt-3 flex-wrap">
                         @foreach($product->images as $img)
-                        <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 relative">
+                        <div class="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 relative group">
                             @if($img->image_path !== 'placeholder')
                                 <img src="{{ asset('storage/' . $img->image_path) }}" class="w-full h-full object-cover">
                             @else
                                 <div class="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-lg">🖼️</div>
+                            @endif
+                            @if($img->is_primary)
+                                <div class="absolute bottom-0 left-0 right-0 bg-brand-500 text-[10px] text-center font-bold text-white py-0.5">Primary</div>
                             @endif
                         </div>
                         @endforeach

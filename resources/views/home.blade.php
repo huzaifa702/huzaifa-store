@@ -127,21 +127,40 @@
 
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 stagger-children">
             @php
-                $categoryIcons = [
-                    'Electronics' => ['🖥️', 'from-blue-500/20 to-indigo-600/20', 'hover:border-blue-500/40'],
-                    'Fashion' => ['👗', 'from-pink-500/20 to-rose-600/20', 'hover:border-pink-500/40'],
-                    'Home & Living' => ['🏠', 'from-amber-500/20 to-orange-600/20', 'hover:border-amber-500/40'],
-                    'Sports' => ['⚽', 'from-emerald-500/20 to-green-600/20', 'hover:border-emerald-500/40'],
-                    'Books' => ['📚', 'from-violet-500/20 to-purple-600/20', 'hover:border-violet-500/40'],
-                    'Beauty' => ['💄', 'from-rose-500/20 to-pink-600/20', 'hover:border-rose-500/40'],
+                $categoryGradients = [
+                    'from-blue-500/20 to-indigo-600/20',
+                    'from-pink-500/20 to-rose-600/20',
+                    'from-amber-500/20 to-orange-600/20',
+                    'from-emerald-500/20 to-green-600/20',
+                    'from-violet-500/20 to-purple-600/20',
+                    'from-rose-500/20 to-pink-600/20',
+                    'from-cyan-500/20 to-teal-600/20',
+                    'from-yellow-500/20 to-amber-600/20',
+                ];
+                $categoryBorders = [
+                    'hover:border-blue-500/40',
+                    'hover:border-pink-500/40',
+                    'hover:border-amber-500/40',
+                    'hover:border-emerald-500/40',
+                    'hover:border-violet-500/40',
+                    'hover:border-rose-500/40',
+                    'hover:border-cyan-500/40',
+                    'hover:border-yellow-500/40',
                 ];
             @endphp
-            @foreach($categories as $category)
-                @php $icon = $categoryIcons[$category->name] ?? ['📦', 'from-gray-500/20 to-slate-600/20', 'hover:border-gray-500/40']; @endphp
+            @foreach($categories as $catIndex => $category)
+                @php
+                    $gradient = $categoryGradients[$catIndex % count($categoryGradients)];
+                    $borderHover = $categoryBorders[$catIndex % count($categoryBorders)];
+                @endphp
                 <a href="{{ route('categories.show', $category) }}"
-                   class="group glass-card rounded-2xl p-6 text-center transition-all duration-500 border border-white/5 {{ $icon[2] }} animate-slide-up">
-                    <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br {{ $icon[1] }} flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform duration-300 animate-glow-ring">
-                        {{ $icon[0] }}
+                   class="group glass-card rounded-2xl p-6 text-center transition-all duration-500 border border-white/5 {{ $borderHover }} animate-slide-up category-card-animate">
+                    <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br {{ $gradient }} flex items-center justify-center mb-4 group-hover:scale-110 transition-all duration-500 animate-glow-ring overflow-hidden shadow-lg group-hover:shadow-brand-500/30">
+                        @if($category->image)
+                            <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}" class="w-full h-full object-cover rounded-2xl transition-transform duration-500 group-hover:scale-110">
+                        @else
+                            <span class="text-2xl font-black text-white/80">{{ strtoupper(substr($category->name, 0, 1)) }}</span>
+                        @endif
                     </div>
                     <h3 class="font-bold text-gray-200 group-hover:text-white transition-colors">{{ $category->name }}</h3>
                     <p class="text-sm text-gray-500 mt-1">{{ $category->active_products_count }} items</p>

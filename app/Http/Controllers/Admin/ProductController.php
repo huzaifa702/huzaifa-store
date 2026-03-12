@@ -110,6 +110,16 @@ class ProductController extends Controller
 
         $oldValues = $product->toArray();
 
+        // If the user checked "replace all existing images"
+        if ($request->has('replace_images') && $request->hasFile('images')) {
+            foreach ($product->images as $existingImage) {
+                if ($existingImage->image_path !== 'placeholder' && \Illuminate\Support\Facades\Storage::disk('public')->exists($existingImage->image_path)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($existingImage->image_path);
+                }
+                $existingImage->delete();
+            }
+        }
+
         $product->update([
             'name' => \Illuminate\Support\Str::title($request->name),
             'slug' => Str::slug($request->name),
@@ -127,13 +137,14 @@ class ProductController extends Controller
         ]);
 
         if ($request->hasFile('images')) {
+            $baseSortOrder = $product->images()->count();
             foreach ($request->file('images') as $index => $image) {
                 $path = $image->store('products', 'public');
                 ProductImage::create([
                     'product_id' => $product->id,
                     'image_path' => $path,
-                    'is_primary' => $product->images()->count() === 0 && $index === 0,
-                    'sort_order' => $product->images()->count() + $index,
+                    'is_primary' => $baseSortOrder === 0 && $index === 0,
+                    'sort_order' => $baseSortOrder + $index,
                 ]);
             }
         }

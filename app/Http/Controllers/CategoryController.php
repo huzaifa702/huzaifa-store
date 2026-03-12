@@ -9,7 +9,7 @@ class CategoryController extends Controller
 {
     public function show(Category $category, Request $request)
     {
-        $query = $category->activeProducts()->with('primaryImage');
+        $query = $category->products()->where('is_active', true)->with('primaryImage', 'category');
 
         if ($request->filled('sort')) {
             match ($request->sort) {

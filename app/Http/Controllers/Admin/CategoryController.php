@@ -115,12 +115,13 @@ class CategoryController extends Controller
     public function destroy(Category $category)
     {
         try {
-            // Soft-delete all products in this category first
+            // Detach products from this category instead of deleting them
+            // This preserves the products so they can be reassigned later
             $productCount = 0;
             try {
                 $productCount = $category->products()->count();
                 if ($productCount > 0) {
-                    $category->products()->delete(); // soft-delete so they can be restored
+                    $category->products()->update(['category_id' => null]);
                 }
             } catch (\Exception $e) { /* ignore */ }
 
@@ -133,13 +134,13 @@ class CategoryController extends Controller
 
             // Log activity
             try {
-                ActivityLogService::log('category_deleted', "Category '{$category->name}' force deleted ({$productCount} products removed)", null, $category);
+                ActivityLogService::log('category_deleted', "Category '{$category->name}' deleted ({$productCount} products detached)", null, $category);
             } catch (\Exception $e) { /* ignore */ }
 
             // Force-delete so slug is fully released and can be reused
             $category->forceDelete();
 
-            return redirect()->route('admin.categories.index')->with('success', "Category deleted successfully! ({$productCount} products also removed)");
+            return redirect()->route('admin.categories.index')->with('success', "Category deleted successfully! ({$productCount} products detached and preserved)");
         } catch (\Exception $e) {
             return back()->with('error', 'Failed to delete category: ' . $e->getMessage());
         }

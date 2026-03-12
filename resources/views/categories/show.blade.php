@@ -10,16 +10,29 @@
     </nav>
 
     <!-- Category Header -->
-    <div class="bg-gradient-to-r from-brand-900 via-brand-800/50 to-dark-900 rounded-3xl p-8 md:p-12 text-white mb-8 animate-on-scroll border border-brand-800/30 relative overflow-hidden">
+    <div class="bg-gradient-to-r from-brand-900 via-brand-800/50 to-dark-900 rounded-3xl p-8 md:p-12 text-white mb-8 border border-brand-800/30 relative overflow-hidden" style="animation: fadeSlideUp 0.7s ease-out">
         <div class="absolute top-0 right-0 w-48 h-48 bg-brand-500/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
-        <div class="relative z-10">
-            <h1 class="text-3xl md:text-4xl font-bold">{{ $category->name }}</h1>
-            @if($category->description)
-                <p class="text-gray-400 mt-2 max-w-2xl">{{ $category->description }}</p>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-neon-cyan/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl"></div>
+        <div class="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
+            @if($category->image)
+                <div class="w-28 h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden shadow-2xl shadow-brand-500/20 ring-2 ring-white/10 flex-shrink-0" style="animation: zoomIn 0.6s cubic-bezier(0.23, 1, 0.32, 1) 0.2s both">
+                    <img src="{{ asset('storage/' . $category->image) }}" alt="{{ $category->name }}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
+                </div>
             @endif
-            <p class="text-gray-500 mt-2 text-sm">{{ $products->total() }} products found</p>
+            <div class="text-center md:text-left">
+                <h1 class="text-3xl md:text-4xl font-bold">{{ $category->name }}</h1>
+                @if($category->description)
+                    <p class="text-gray-400 mt-2 max-w-2xl">{{ $category->description }}</p>
+                @endif
+                <p class="text-gray-500 mt-2 text-sm">{{ $products->total() }} products found</p>
+            </div>
         </div>
     </div>
+
+    <style>
+        @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes zoomIn { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
+    </style>
 
     <div class="flex items-center justify-between mb-6">
         <div class="flex items-center gap-3">

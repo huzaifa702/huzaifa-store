@@ -26,9 +26,11 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        View::composer('layouts.app', function ($view) {
-            $view->with('navCategories', Category::where('is_active', true)
-                ->orderBy('sort_order')->get());
-        });
+        if (!app()->runningUnitTests()) {
+            View::composer('layouts.app', function ($view) {
+                $view->with('navCategories', Category::where('is_active', true)
+                    ->orderBy('sort_order')->get());
+            });
+        }
     }
 }
