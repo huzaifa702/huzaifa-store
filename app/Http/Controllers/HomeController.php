@@ -102,6 +102,9 @@ class HomeController extends Controller
                     'desc' => 'Your premium shopping destination.',
                     'image' => 'https://picsum.photos/seed/store/500/500',
                     'category_slug' => '',
+                    'price' => null,
+                    'original_price' => null,
+                    'product_url' => null,
                 ];
             }
 
@@ -116,7 +119,16 @@ class HomeController extends Controller
                 'latestProducts' => collect(),
                 'saleProducts' => collect(),
                 'heroSlides' => [
-                    ['badge' => '🔥 Premium Store', 'title' => 'Welcome to <span class="gradient-text">Huzaifa Store</span>', 'desc' => 'Your premium shopping destination.', 'image' => 'https://picsum.photos/seed/store/500/500', 'category_slug' => ''],
+                    [
+                        'badge' => '🔥 Premium Store', 
+                        'title' => 'Welcome to <span class="gradient-text">Huzaifa Store</span>', 
+                        'desc' => 'Your premium shopping destination.', 
+                        'image' => 'https://picsum.photos/seed/store/500/500', 
+                        'category_slug' => '',
+                        'price' => null,
+                        'original_price' => null,
+                        'product_url' => null,
+                    ],
                 ],
                 'productCount' => 0,
                 'categoryCount' => 0,

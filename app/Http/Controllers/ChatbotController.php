@@ -135,8 +135,8 @@ class ChatbotController extends Controller
         // Use user's text as prompt if provided, otherwise default
         $userMessage = $request->input('message', '');
         $prompt = $userMessage
-            ? "The user uploaded this image and asks: \"{$userMessage}\". Analyze the image and answer their question. If relevant, mention product categories from our store. Be concise (under 150 words)."
-            : "Analyze this image. If it shows a product, identify its category and features. Be concise (under 100 words).";
+            ? "The user uploaded an image and asks: \"{$userMessage}\". Analyze the image and answer their question thoroughly. If there is code, explain it or identify errors. If it's a general question, answer it using your full intelligence as an AI."
+            : "Analyze this image and describe it in detail. If there is code, explain it. If it's a product, describe its features.";
 
         // Try AI-powered image analysis
         $analysis = $this->ai->analyzeImage($fullPath, $prompt);

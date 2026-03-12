@@ -90,26 +90,35 @@ class CategoryController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
-        $data = [
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'description' => $request->description,
-            'is_active' => $request->has('is_active'),
-            'sort_order' => $request->input('sort_order', 0),
-        ];
+        try {
+            $data = [
+                'name' => $request->name,
+                'slug' => Str::slug($request->name),
+                'description' => $request->description,
+                'is_active' => $request->has('is_active'),
+                'sort_order' => $request->input('sort_order', 0),
+            ];
 
-        if ($request->hasFile('image')) {
-            if ($category->image && Storage::disk('public')->exists($category->image)) {
-                Storage::disk('public')->delete($category->image);
+            if ($request->hasFile('image')) {
+                if ($category->image && Storage::disk('public')->exists($category->image)) {
+                    Storage::disk('public')->delete($category->image);
+                }
+                $data['image'] = $request->file('image')->store('categories', 'public');
             }
-            $data['image'] = $request->file('image')->store('categories', 'public');
+
+            $category->update($data);
+
+            try {
+                ActivityLogService::log('category_updated', "Category '{$category->name}' updated", null, $category);
+            } catch (\Exception $e) {
+                // Ignore activity log errors
+            }
+
+            return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully!');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Category update failed: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to update category: ' . $e->getMessage());
         }
-
-        $category->update($data);
-
-        ActivityLogService::log('category_updated', "Category '{$category->name}' updated", null, $category);
-
-        return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully!');
     }
 
     public function destroy(Category $category)
@@ -148,13 +157,18 @@ class CategoryController extends Controller
 
     public function toggleActive(Category $category)
     {
-        $category->update(['is_active' => !$category->is_active]);
-
-        $status = $category->is_active ? 'activated' : 'deactivated';
         try {
-            ActivityLogService::log("category_{$status}", "Category '{$category->name}' {$status}", null, $category);
-        } catch (\Exception $e) { /* ignore */ }
+            $category->update(['is_active' => !$category->is_active]);
 
-        return back()->with('success', "Category {$status} successfully!");
+            $status = $category->is_active ? 'activated' : 'deactivated';
+            try {
+                ActivityLogService::log("category_{$status}", "Category '{$category->name}' {$status}", null, $category);
+            } catch (\Exception $e) { /* ignore */ }
+
+            return back()->with('success', "Category {$status} successfully!");
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Category toggle active failed: ' . $e->getMessage());
+            return back()->with('error', 'Failed to update category status: ' . $e->getMessage());
+        }
     }
 }

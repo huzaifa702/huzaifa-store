@@ -1032,7 +1032,7 @@ document.addEventListener('DOMContentLoaded', function() {
             isRecording = false;
             micBtn.classList.remove('recording');
             micIcon.textContent = '🎤';
-            chatInput.placeholder = 'Ask me anything about products...';
+            chatInput.placeholder = 'Ask anything — code, math, products, general knowledge...';
             sendTextMessage(transcript);
         };
 
@@ -1040,14 +1040,14 @@ document.addEventListener('DOMContentLoaded', function() {
             isRecording = false;
             micBtn.classList.remove('recording');
             micIcon.textContent = '🎤';
-            chatInput.placeholder = 'Ask me anything about products...';
+            chatInput.placeholder = 'Ask anything — code, math, products, general knowledge...';
         };
 
         sttRecognition.onend = function() {
             isRecording = false;
             micBtn.classList.remove('recording');
             micIcon.textContent = '🎤';
-            chatInput.placeholder = 'Ask me anything about products...';
+            chatInput.placeholder = 'Ask anything — code, math, products, general knowledge...';
         };
 
         sttRecognition.start();

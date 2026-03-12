@@ -52,37 +52,46 @@ class ProductController extends Controller
             'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
-        $product = Product::create([
-            'name' => \Illuminate\Support\Str::title($request->name),
-            'slug' => Str::slug($request->name),
-            'category_id' => $request->category_id,
-            'price' => $request->price,
-            'sale_price' => $request->sale_price,
-            'short_description' => $request->short_description,
-            'description' => $request->description,
-            'sku' => $request->sku,
-            'stock' => $request->stock,
-            'is_active' => $request->has('is_active'),
-            'is_featured' => $request->has('is_featured'),
-            'meta_title' => $request->name,
-            'meta_description' => $request->short_description,
-        ]);
+        try {
+            $product = Product::create([
+                'name' => \Illuminate\Support\Str::title($request->name),
+                'slug' => Str::slug($request->name),
+                'category_id' => $request->category_id,
+                'price' => $request->price,
+                'sale_price' => $request->sale_price,
+                'short_description' => $request->short_description,
+                'description' => $request->description,
+                'sku' => $request->sku,
+                'stock' => $request->stock,
+                'is_active' => $request->has('is_active'),
+                'is_featured' => $request->has('is_featured'),
+                'meta_title' => $request->name,
+                'meta_description' => $request->short_description,
+            ]);
 
-        if ($request->hasFile('images')) {
-            foreach ($request->file('images') as $index => $image) {
-                $path = $image->store('products', 'public');
-                ProductImage::create([
-                    'product_id' => $product->id,
-                    'image_path' => $path,
-                    'is_primary' => $index === 0,
-                    'sort_order' => $index,
-                ]);
+            if ($request->hasFile('images')) {
+                foreach ($request->file('images') as $index => $image) {
+                    $path = $image->store('products', 'public');
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'image_path' => $path,
+                        'is_primary' => $index === 0,
+                        'sort_order' => $index,
+                    ]);
+                }
             }
+
+            try {
+                ActivityLogService::log('product_created', "Product '{$product->name}' created", null, $product);
+            } catch (\Exception $e) {
+                // Ignore log errors so it doesn't crash creation
+            }
+
+            return redirect()->route('admin.products.index')->with('success', 'Product created successfully!');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Product creation failed: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to create product: ' . $e->getMessage());
         }
-
-        ActivityLogService::log('product_created', "Product '{$product->name}' created", null, $product);
-
-        return redirect()->route('admin.products.index')->with('success', 'Product created successfully!');
     }
 
     public function edit(Product $product)
@@ -108,67 +117,88 @@ class ProductController extends Controller
             'images.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
-        $oldValues = $product->toArray();
+        try {
+            $oldValues = $product->toArray();
 
-        // If the user checked "replace all existing images"
-        if ($request->has('replace_images') && $request->hasFile('images')) {
-            foreach ($product->images as $existingImage) {
-                if ($existingImage->image_path !== 'placeholder' && \Illuminate\Support\Facades\Storage::disk('public')->exists($existingImage->image_path)) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($existingImage->image_path);
+            // If the user checked "replace all existing images"
+            if ($request->has('replace_images') && $request->hasFile('images')) {
+                foreach ($product->images as $existingImage) {
+                    if ($existingImage->image_path !== 'placeholder' && \Illuminate\Support\Facades\Storage::disk('public')->exists($existingImage->image_path)) {
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($existingImage->image_path);
+                    }
+                    $existingImage->delete();
                 }
-                $existingImage->delete();
             }
-        }
 
-        $product->update([
-            'name' => \Illuminate\Support\Str::title($request->name),
-            'slug' => Str::slug($request->name),
-            'category_id' => $request->category_id,
-            'price' => $request->price,
-            'sale_price' => $request->sale_price,
-            'short_description' => $request->short_description,
-            'description' => $request->description,
-            'sku' => $request->sku,
-            'stock' => $request->stock,
-            'is_active' => $request->has('is_active'),
-            'is_featured' => $request->has('is_featured'),
-            'meta_title' => $request->name,
-            'meta_description' => $request->short_description,
-        ]);
+            $product->update([
+                'name' => \Illuminate\Support\Str::title($request->name),
+                'slug' => Str::slug($request->name),
+                'category_id' => $request->category_id,
+                'price' => $request->price,
+                'sale_price' => $request->sale_price,
+                'short_description' => $request->short_description,
+                'description' => $request->description,
+                'sku' => $request->sku,
+                'stock' => $request->stock,
+                'is_active' => $request->has('is_active'),
+                'is_featured' => $request->has('is_featured'),
+                'meta_title' => $request->name,
+                'meta_description' => $request->short_description,
+            ]);
 
-        if ($request->hasFile('images')) {
-            $baseSortOrder = $product->images()->count();
-            foreach ($request->file('images') as $index => $image) {
-                $path = $image->store('products', 'public');
-                ProductImage::create([
-                    'product_id' => $product->id,
-                    'image_path' => $path,
-                    'is_primary' => $baseSortOrder === 0 && $index === 0,
-                    'sort_order' => $baseSortOrder + $index,
-                ]);
+            if ($request->hasFile('images')) {
+                $baseSortOrder = $product->images()->count();
+                foreach ($request->file('images') as $index => $image) {
+                    $path = $image->store('products', 'public');
+                    ProductImage::create([
+                        'product_id' => $product->id,
+                        'image_path' => $path,
+                        'is_primary' => $baseSortOrder === 0 && $index === 0,
+                        'sort_order' => $baseSortOrder + $index,
+                    ]);
+                }
             }
+
+            try {
+                ActivityLogService::log('product_updated', "Product '{$product->name}' updated", null, $product, $oldValues, $product->toArray());
+            } catch (\Exception $e) {
+                // Ignore log errors
+            }
+
+            return redirect()->route('admin.products.index')->with('success', 'Product updated successfully!');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Product update failed: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Failed to update product: ' . $e->getMessage());
         }
-
-        ActivityLogService::log('product_updated', "Product '{$product->name}' updated", null, $product, $oldValues, $product->toArray());
-
-        return redirect()->route('admin.products.index')->with('success', 'Product updated successfully!');
     }
 
     public function destroy(Product $product)
     {
-        ActivityLogService::log('product_deleted', "Product '{$product->name}' deleted", null, $product);
-        $product->delete();
-
-        return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully!');
+        try {
+            try {
+                ActivityLogService::log('product_deleted', "Product '{$product->name}' deleted", null, $product);
+            } catch (\Exception $e) {}
+            
+            $product->delete();
+            return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to delete product: ' . $e->getMessage());
+        }
     }
 
     public function toggleActive(Product $product)
     {
-        $product->update(['is_active' => !$product->is_active]);
+        try {
+            $product->update(['is_active' => !$product->is_active]);
 
-        $status = $product->is_active ? 'activated' : 'deactivated';
-        ActivityLogService::log("product_{$status}", "Product '{$product->name}' {$status}", null, $product);
+            $status = $product->is_active ? 'activated' : 'deactivated';
+            try {
+                ActivityLogService::log("product_{$status}", "Product '{$product->name}' {$status}", null, $product);
+            } catch (\Exception $e) {}
 
-        return back()->with('success', "Product {$status} successfully!");
+            return back()->with('success', "Product {$status} successfully!");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to toggle status: ' . $e->getMessage());
+        }
     }
 }
