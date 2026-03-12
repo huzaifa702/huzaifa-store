@@ -409,7 +409,7 @@ class ChatbotController extends Controller
         }
 
         // Help / What can you do
-        if (preg_match('/(help|what can you|what do you|features|capabilities|menu)/i', $message)) {
+        if (preg_match('/^(help|what can you do|what do you do|features|menu)$/i', trim($message))) {
             return ['text' => "🤖 **I'm the Huzaifa Store AI Agent!** Here's what I can do:\n\n"
                 . "🛍️ **Product Search** — \"Show me electronics\" or \"find laptops\"\n"
                 . "🔥 **Deals & Sales** — \"What's on sale?\" or \"show deals\"\n"
@@ -424,14 +424,14 @@ class ChatbotController extends Controller
         }
 
         // Categories
-        if (preg_match('/(categor|what.*sell|what.*have|browse|shop)/i', $message)) {
+        if (preg_match('/\b(show categories|list categories|what categories|browse categories)\b/i', $message)) {
             $categories = Category::where('is_active', true)->withCount('activeProducts')->get();
             $list = $categories->map(fn($c) => "• **{$c->name}** ({$c->active_products_count} items)")->implode("\n");
             return ['text' => "🏷️ **Our Categories:**\n\n{$list}\n\n💡 Ask me about any category to see products!", 'type' => 'text'];
         }
 
         // Deals / Sales
-        if (preg_match('/(deal|sale|discount|offer|cheap|bargain|save|on sale)/i', $message)) {
+        if (preg_match('/\b(show deals|hot deals|what is on sale|any discounts|discounted products)\b/i', $message)) {
             $products = Product::where('is_active', true)
                 ->whereNotNull('sale_price')
                 ->with('primaryImage', 'category')
@@ -441,7 +441,7 @@ class ChatbotController extends Controller
         }
 
         // Popular / Featured
-        if (preg_match('/(popular|featured|recommend|suggest|best|top|trending|new arrival)/i', $message)) {
+        if (preg_match('/\b(popular products|featured products|top products|recommend products|best sellers)\b/i', $message)) {
             $products = Product::where('is_active', true)
                 ->where('is_featured', true)
                 ->with('primaryImage', 'category')
@@ -453,7 +453,8 @@ class ChatbotController extends Controller
         // Specific category search
         $categories = Category::where('is_active', true)->get();
         foreach ($categories as $cat) {
-            if (str_contains($message, strtolower($cat->name)) || str_contains($message, strtolower($cat->slug))) {
+            $namePattern = preg_quote($cat->name, '/');
+            if (preg_match("/^(show|find|buy|shop|browse|any)?\s*{$namePattern}\b/i", trim($message)) || preg_match("/\b{$namePattern}\s*(products|items|accessories)\b/i", $message)) {
                 $products = Product::where('category_id', $cat->id)
                     ->where('is_active', true)
                     ->with('primaryImage', 'category')
@@ -464,7 +465,7 @@ class ChatbotController extends Controller
         }
 
         // Order tracking
-        if (preg_match('/(order|track|delivery|shipping|status|where.*order|my order)/i', $message)) {
+        if (preg_match('/^(my orders|track my order|order status|track order|where is my order)$/i', trim($message))) {
             if (!Auth::check()) {
                 return ['text' => "🔒 Please **log in** to track your orders! [Login here](/login)", 'type' => 'text'];
             }
@@ -477,17 +478,17 @@ class ChatbotController extends Controller
         }
 
         // Shipping
-        if (preg_match('/(ship|deliver|how long|when.*arrive|free shipping)/i', $message)) {
+        if (preg_match('/^(shipping|shipping policy|delivery|delivery info|how long is shipping)$/i', trim($message))) {
             return ['text' => "🚚 **Shipping Info:**\n\n• **Standard:** 5-7 business days (Free over \$50)\n• **Express:** 2-3 business days (\$9.99)\n• **Overnight:** Next day delivery (\$19.99)\n\n📍 We ship nationwide! All orders include tracking.", 'type' => 'text'];
         }
 
         // Returns
-        if (preg_match('/(return|refund|exchange|money back|cancel)/i', $message)) {
+        if (preg_match('/^(returns|return policy|refunds|refund policy|how to return)$/i', trim($message))) {
             return ['text' => "🔄 **Return Policy:**\n\n• **30-day** hassle-free returns\n• Items must be unused and in original packaging\n• Refunds processed within 5-7 business days\n• Free return shipping on defective items\n\nContact us at mhuzaifa2503a@aptechorangi.com for returns!", 'type' => 'text'];
         }
 
         // Payment
-        if (preg_match('/(pay|payment|credit card|debit|method|cash on delivery|cod)/i', $message)) {
+        if (preg_match('/^(payment|payment methods|how to pay|cod|cash on delivery|credit cards)\??$/i', trim($message))) {
             return ['text' => "💳 **Payment Methods:**\n\n• Credit/Debit Cards (Visa, Mastercard)\n• Cash on Delivery (COD)\n• Bank Transfer\n• Easy Installments available\n\n🔒 All payments are secured with SSL encryption!", 'type' => 'text'];
         }
 
