@@ -37,6 +37,7 @@ Route::middleware('admin')->group(function () {
     Route::get('/categories/{category}/edit', [CategoryController::class, 'edit'])->name('admin.categories.edit');
     Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('admin.categories.update');
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('admin.categories.destroy');
+    Route::post('/categories/{category}/toggle', [CategoryController::class, 'toggleActive'])->name('admin.categories.toggle');
 
     // Users
     Route::get('/users', [UserController::class, 'index'])->name('admin.users.index');

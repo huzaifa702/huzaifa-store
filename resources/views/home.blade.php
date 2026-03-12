@@ -331,7 +331,7 @@
         <div class="text-5xl mb-6 animate-float">📧</div>
         <h2 class="text-3xl md:text-4xl font-black gradient-text-shimmer mb-4">Stay in the Loop</h2>
         <p class="text-gray-400 mb-8 max-w-lg mx-auto">Subscribe to our newsletter and get exclusive deals, early access to new products, and 10% off your first order.</p>
-        <form class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto" onsubmit="event.preventDefault(); alert('Thanks for subscribing!');">
+        <form class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto" action="javascript:void(0)" onsubmit="alert('Thanks for subscribing!');">
             <input type="email" placeholder="Enter your email address" required
                    class="flex-1 px-6 py-4 rounded-xl bg-dark-800/80 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent backdrop-blur-sm">
             <button type="submit" class="px-8 py-4 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 transform hover:scale-105 transition-all duration-300 btn-glow whitespace-nowrap">

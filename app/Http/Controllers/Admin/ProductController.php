@@ -62,8 +62,8 @@ class ProductController extends Controller
             'description' => $request->description,
             'sku' => $request->sku,
             'stock' => $request->stock,
-            'is_active' => $request->boolean('is_active', true),
-            'is_featured' => $request->boolean('is_featured', false),
+            'is_active' => $request->has('is_active'),
+            'is_featured' => $request->has('is_featured'),
             'meta_title' => $request->name,
             'meta_description' => $request->short_description,
         ]);
@@ -130,8 +130,8 @@ class ProductController extends Controller
             'description' => $request->description,
             'sku' => $request->sku,
             'stock' => $request->stock,
-            'is_active' => $request->boolean('is_active', true),
-            'is_featured' => $request->boolean('is_featured', false),
+            'is_active' => $request->has('is_active'),
+            'is_featured' => $request->has('is_featured'),
             'meta_title' => $request->name,
             'meta_description' => $request->short_description,
         ]);

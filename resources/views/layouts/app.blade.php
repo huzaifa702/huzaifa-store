@@ -803,7 +803,7 @@
                 <div>
                     <h3 class="text-white font-semibold mb-4">Newsletter</h3>
                     <p class="text-gray-500 text-sm mb-3">Get updates on new products and deals.</p>
-                    <form action="#" method="POST" class="flex">
+                    <form action="javascript:void(0)" method="POST" class="flex" onsubmit="alert('Thanks for subscribing!')">
                         @csrf
                         <input type="email" name="email" required placeholder="Your email"
                             class="flex-1 px-4 py-2.5 bg-dark-800/60 border border-white/[0.06] rounded-l-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500/50">

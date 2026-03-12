@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Order;
+use App\Models\ChatHistory;
 use App\Services\AiAgentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,7 +25,13 @@ class ChatbotController extends Controller
     public function page()
     {
         $categories = Category::where('is_active', true)->withCount('activeProducts')->get();
-        return view('chatbot', compact('categories'));
+        $chatHistory = collect();
+
+        if (Auth::check()) {
+            $chatHistory = ChatHistory::where('user_id', Auth::id())->orderBy('created_at', 'asc')->get();
+        }
+
+        return view('chatbot', compact('categories', 'chatHistory'));
     }
 
     /**
@@ -36,10 +43,31 @@ class ChatbotController extends Controller
         $message = trim($request->message);
         $messageLower = strtolower($message);
 
+        // Save user message to DB if authenticated
+        if (Auth::check()) {
+            ChatHistory::create([
+                'user_id' => Auth::id(),
+                'message' => $message,
+                'sender' => 'user',
+                'type' => 'text'
+            ]);
+        }
+
         // SECURITY: Check for prompt injection attempts
         if ($this->ai->isPromptInjection($message)) {
+            $replyText = "🔒 I can't process that request. I'm here to help with shopping, products, and general questions! Try asking about our **products**, **deals**, or **categories**.";
+            
+            if (Auth::check()) {
+                ChatHistory::create([
+                    'user_id' => Auth::id(),
+                    'message' => $replyText,
+                    'sender' => 'ai',
+                    'type' => 'text'
+                ]);
+            }
+
             return response()->json([
-                'reply' => "🔒 I can't process that request. I'm here to help with shopping, products, and general questions! Try asking about our **products**, **deals**, or **categories**.",
+                'reply' => $replyText,
                 'products' => [],
                 'type' => 'text',
             ]);
@@ -72,6 +100,17 @@ class ChatbotController extends Controller
             }
         }
 
+        if (Auth::check()) {
+            $productsData = !empty($response['products']) ? json_encode($response['products']) : null;
+            ChatHistory::create([
+                'user_id' => Auth::id(),
+                'message' => $response['text'],
+                'sender' => 'ai',
+                'type' => $response['type'] ?? 'text',
+                'products_data' => $productsData
+            ]);
+        }
+
         return response()->json([
             'reply' => $response['text'],
             'products' => $response['products'] ?? [],
@@ -102,12 +141,34 @@ class ChatbotController extends Controller
         // Try AI-powered image analysis
         $analysis = $this->ai->analyzeImage($fullPath, $prompt);
 
+        if (Auth::check()) {
+            ChatHistory::create([
+                'user_id' => Auth::id(),
+                'message' => $userMessage ?: 'Uploaded an image for analysis.',
+                'sender' => 'user',
+                'type' => 'text',
+                'image_path' => $path
+            ]);
+        }
+
         if ($analysis) {
             // Use AI analysis to search for matching products
             $products = $this->searchProductsFromAnalysis($analysis);
+            $replyText = "🔍 **AI Image Analysis:**\n\n" . $analysis . "\n\n" . ($products->isNotEmpty() ? "Here are matching products:" : "I couldn't find exact matches, but browse our categories!");
+
+            if (Auth::check()) {
+                $productsData = $products->isNotEmpty() ? json_encode($products) : null;
+                ChatHistory::create([
+                    'user_id' => Auth::id(),
+                    'message' => $replyText,
+                    'sender' => 'ai',
+                    'type' => $products->isNotEmpty() ? 'products' : 'text',
+                    'products_data' => $productsData
+                ]);
+            }
 
             return response()->json([
-                'reply' => "🔍 **AI Image Analysis:**\n\n" . $analysis . "\n\n" . ($products->isNotEmpty() ? "Here are matching products:" : "I couldn't find exact matches, but browse our categories!"),
+                'reply' => $replyText,
                 'products' => $products,
                 'type' => $products->isNotEmpty() ? 'products' : 'text',
                 'uploaded_image' => asset('storage/' . $path),
@@ -123,8 +184,20 @@ class ChatbotController extends Controller
             ->get()
             ->map(fn($p) => $this->formatProduct($p));
 
+        $replyText = "📸 I received your image! Here are some products you might like:";
+
+        if (Auth::check()) {
+            ChatHistory::create([
+                'user_id' => Auth::id(),
+                'message' => $replyText,
+                'sender' => 'ai',
+                'type' => 'products',
+                'products_data' => json_encode($products)
+            ]);
+        }
+
         return response()->json([
-            'reply' => "📸 I received your image! Here are some products you might like:",
+            'reply' => $replyText,
             'products' => $products,
             'type' => 'products',
             'uploaded_image' => asset('storage/' . $path),

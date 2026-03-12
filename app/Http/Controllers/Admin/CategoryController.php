@@ -53,7 +53,7 @@ class CategoryController extends Controller
                 'name' => $request->name,
                 'slug' => $slug,
                 'description' => $request->description,
-                'is_active' => $request->boolean('is_active', true),
+                'is_active' => $request->has('is_active'),
                 'sort_order' => $request->input('sort_order', 0),
             ];
 
@@ -94,7 +94,7 @@ class CategoryController extends Controller
             'name' => $request->name,
             'slug' => Str::slug($request->name),
             'description' => $request->description,
-            'is_active' => $request->boolean('is_active', true),
+            'is_active' => $request->has('is_active'),
             'sort_order' => $request->input('sort_order', 0),
         ];
 
@@ -144,5 +144,17 @@ class CategoryController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Failed to delete category: ' . $e->getMessage());
         }
+    }
+
+    public function toggleActive(Category $category)
+    {
+        $category->update(['is_active' => !$category->is_active]);
+
+        $status = $category->is_active ? 'activated' : 'deactivated';
+        try {
+            ActivityLogService::log("category_{$status}", "Category '{$category->name}' {$status}", null, $category);
+        } catch (\Exception $e) { /* ignore */ }
+
+        return back()->with('success', "Category {$status} successfully!");
     }
 }

@@ -49,7 +49,7 @@
                     <div class="chatbot-avatar-sm">🤖</div>
                     <div class="chatbot-bot-bubble">
                         <p class="text-gray-200 text-sm leading-relaxed">
-                            Hello! 👋 I'm your <strong>AI Shopping Assistant</strong>. I can help you with:
+                            Hello{{ Auth::check() ? ' ' . explode(' ', Auth::user()->name)[0] : '' }}! 👋 I'm your <strong>AI Shopping Assistant</strong>. I can help you with:
                         </p>
                         <ul class="text-gray-300 text-sm mt-2 space-y-1">
                             <li>🔍 <strong>Search products</strong> — Try "show me headphones" or "find budget laptops"</li>
@@ -61,6 +61,50 @@
                         <p class="text-gray-400 text-xs mt-3">Try the quick actions below or just type your question!</p>
                     </div>
                 </div>
+
+                <!-- Load Chat History -->
+                @if(isset($chatHistory) && $chatHistory->count() > 0)
+                    @foreach($chatHistory as $msg)
+                        @if($msg->sender === 'user')
+                            <div class="flex justify-end">
+                                <div class="chatbot-user-bubble">
+                                    <p class="text-sm">
+                                        @if($msg->image_path)
+                                            <div class="mb-2 rounded-lg overflow-hidden border border-white/20"><img src="{{ asset('storage/' . $msg->image_path) }}" class="max-w-[200px] h-auto object-cover"></div>
+                                        @endif
+                                        {{ $msg->message }}
+                                    </p>
+                                </div>
+                            </div>
+                        @else
+                            <div class="flex gap-3">
+                                <div class="chatbot-avatar-sm">🤖</div>
+                                <div class="chatbot-bot-bubble" style="width: 100%;">
+                                    <!-- Render Bot Text with Markdown -->
+                                    <div class="text-sm text-gray-200 leading-relaxed space-y-3 prose prose-invert prose-sm max-w-none">
+                                        {!! Str::markdown($msg->message) !!}
+                                    </div>
+                                    
+                                    <!-- Render Saved Products if any -->
+                                    @if($msg->type === 'products' && !empty($msg->products_data))
+                                        <div class="space-y-2 mt-3">
+                                            @foreach($msg->products_data as $product)
+                                                <a href="{{ $product['url'] ?? '/products/' . ($product['id'] ?? '') }}" class="chat-product-card bg-slate-700/50 hover:bg-slate-700 rounded-xl p-3 border border-slate-600/30 hover:border-brand-500/30 flex gap-3 items-center">
+                                                    <img src="{{ $product['image'] ?? '/images/placeholder.png' }}" class="w-14 h-14 object-cover rounded-lg flex-shrink-0" onerror="this.src='/images/placeholder.png'">
+                                                    <div class="flex-1 min-w-0">
+                                                        <p class="text-sm font-semibold text-gray-200 truncate">{{ $product['name'] ?? 'Product' }}</p>
+                                                        <p class="text-brand-400 font-bold text-sm">${{ number_format((float)($product['price'] ?? 0), 2) }}</p>
+                                                    </div>
+                                                    <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+                    @endforeach
+                @endif
             </div>
 
             <!-- Quick Actions (Dynamic from Admin Panel categories) -->

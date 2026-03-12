@@ -33,7 +33,12 @@
             <p class="text-sm text-gray-500 mb-4 line-clamp-2">{{ $category->description }}</p>
         @endif
         <div class="flex items-center justify-between">
-            <span class="px-3 py-1 rounded-full text-xs font-bold {{ $category->is_active ? 'bg-green-100 text-green-700' : 'bg-slate-800 text-gray-500' }}">{{ $category->is_active ? 'Active' : 'Inactive' }}</span>
+            <form action="{{ route('admin.categories.toggle', $category) }}" method="POST">
+                @csrf
+                <button type="submit" class="px-3 py-1 rounded-full text-xs font-bold transition-opacity hover:opacity-80 {{ $category->is_active ? 'bg-green-100 text-green-700' : 'bg-slate-800 text-gray-400' }}">
+                    {{ $category->is_active ? 'Active' : 'Inactive' }}
+                </button>
+            </form>
             <div class="flex gap-2">
                 <a href="{{ route('admin.categories.edit', $category) }}" class="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold hover:bg-blue-100 transition-colors">Edit</a>
                 <form action="{{ route('admin.categories.destroy', $category) }}" method="POST" onsubmit="return confirm('Delete &quot;{{ $category->name }}&quot; and ALL its {{ $category->products_count ?? 0 }} products? This cannot be undone.')">
