@@ -3,22 +3,22 @@
 @section('page-title', 'Products')
 
 @section('content')
-<div class="flex items-center justify-between mb-6">
-    <div>
-        <form action="{{ route('admin.products.index') }}" method="GET" class="flex gap-3 flex-wrap items-center">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products..." class="px-4 py-2 bg-slate-900 rounded-xl border border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 w-64 text-gray-200 placeholder-gray-500">
-            <select name="category" class="px-4 py-2 bg-slate-900 rounded-xl border border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 text-gray-300" onchange="this.form.submit()">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+    <div class="w-full sm:w-auto">
+        <form action="{{ route('admin.products.index') }}" method="GET" class="flex gap-2 sm:gap-3 flex-wrap items-center">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search products..." class="px-4 py-2 bg-slate-900 rounded-xl border border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 w-full sm:w-48 md:w-64 text-gray-200 placeholder-gray-500">
+            <select name="category" class="px-4 py-2 bg-slate-900 rounded-xl border border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 text-gray-300 w-full sm:w-auto" onchange="this.form.submit()">
                 <option value="">All Categories</option>
                 @foreach($categories as $cat)
                     <option value="{{ $cat->id }}" {{ request('category') == $cat->id ? 'selected' : '' }}>{{ $cat->name }} ({{ $cat->products_count }})</option>
                 @endforeach
             </select>
-            <button type="submit" class="px-4 py-2 bg-brand-500 text-white rounded-xl text-sm font-semibold hover:bg-brand-600 transition-colors">Search</button>
+            <button type="submit" class="px-4 py-2 bg-brand-500 text-white rounded-xl text-sm font-semibold hover:bg-brand-600 transition-colors w-full sm:w-auto">Search</button>
         </form>
     </div>
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3 justify-between sm:justify-end w-full sm:w-auto">
         <span class="text-sm text-gray-500">{{ $products->total() }} product{{ $products->total() !== 1 ? 's' : '' }}</span>
-        <a href="{{ route('admin.products.create') }}" class="px-6 py-2 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all text-sm">+ Add Product</a>
+        <a href="{{ route('admin.products.create') }}" class="px-4 sm:px-6 py-2 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all text-sm whitespace-nowrap">+ Add Product</a>
     </div>
 </div>
 

@@ -3,11 +3,11 @@
 @section('page-title', 'Backups & Tools')
 
 @section('content')
-<div class="flex items-center justify-between mb-6">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
     <h2 class="text-lg font-bold">Database Backups</h2>
     <form action="{{ route('admin.backups.create') }}" method="POST">
         @csrf
-        <button type="submit" class="px-6 py-2 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all text-sm">💾 Create Backup</button>
+        <button type="submit" class="px-6 py-2 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all text-sm w-full sm:w-auto">💾 Create Backup</button>
     </form>
 </div>
 

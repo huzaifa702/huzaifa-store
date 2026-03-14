@@ -3,9 +3,9 @@
 @section('page-title', 'Categories')
 
 @section('content')
-<div class="flex items-center justify-between mb-6">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
     <h2 class="text-lg font-bold">All Categories</h2>
-    <a href="{{ route('admin.categories.create') }}" class="px-6 py-2 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all text-sm">+ Add Category</a>
+    <a href="{{ route('admin.categories.create') }}" class="px-6 py-2 bg-gradient-to-r from-brand-500 to-brand-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all text-sm text-center whitespace-nowrap">+ Add Category</a>
 </div>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

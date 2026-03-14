@@ -4,9 +4,9 @@
 
 @section('content')
 <div class="mb-6">
-    <form action="{{ route('admin.users.index') }}" method="GET" class="flex gap-3">
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search customers..." class="px-4 py-2 bg-slate-900 rounded-xl border shadow-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 w-64">
-        <button type="submit" class="px-4 py-2 bg-brand-500 text-white rounded-xl text-sm font-semibold hover:bg-brand-600 transition-colors">Search</button>
+    <form action="{{ route('admin.users.index') }}" method="GET" class="flex gap-2 sm:gap-3 flex-wrap items-center">
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search customers..." class="px-4 py-2 bg-slate-900 rounded-xl border border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 w-full sm:w-64 text-gray-200 placeholder-gray-500">
+        <button type="submit" class="px-4 py-2 bg-brand-500 text-white rounded-xl text-sm font-semibold hover:bg-brand-600 transition-colors w-full sm:w-auto">Search</button>
     </form>
 </div>
 

@@ -3,16 +3,16 @@
 @section('page-title', 'Orders')
 
 @section('content')
-<div class="flex items-center justify-between mb-6">
-    <form action="{{ route('admin.orders.index') }}" method="GET" class="flex gap-3">
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search orders..." class="px-4 py-2 bg-slate-900 rounded-xl border shadow-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 w-64">
-        <select name="status" class="px-4 py-2 bg-slate-900 rounded-xl border shadow-black/20 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+    <form action="{{ route('admin.orders.index') }}" method="GET" class="flex gap-2 sm:gap-3 flex-wrap items-center w-full sm:w-auto">
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Search orders..." class="px-4 py-2 bg-slate-900 rounded-xl border border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 w-full sm:w-48 md:w-64 text-gray-200 placeholder-gray-500">
+        <select name="status" class="px-4 py-2 bg-slate-900 rounded-xl border border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400 text-gray-300 w-full sm:w-auto">
             <option value="">All Statuses</option>
             @foreach(['pending','processing','shipped','delivered','cancelled'] as $s)
                 <option value="{{ $s }}" {{ request('status') == $s ? 'selected' : '' }}>{{ ucfirst($s) }}</option>
             @endforeach
         </select>
-        <button type="submit" class="px-4 py-2 bg-brand-500 text-white rounded-xl text-sm font-semibold hover:bg-brand-600 transition-colors">Filter</button>
+        <button type="submit" class="px-4 py-2 bg-brand-500 text-white rounded-xl text-sm font-semibold hover:bg-brand-600 transition-colors w-full sm:w-auto">Filter</button>
     </form>
 </div>
 

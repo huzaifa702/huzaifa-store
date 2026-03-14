@@ -179,7 +179,7 @@
                 ];
             @endphp
             @foreach($navItems as $item)
-                <a href="{{ route($item['route']) }}"
+                <a href="{{ route($item['route']) }}" @click="sidebarOpen = false"
                    class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 {{ request()->routeIs($item['route'].'*') ? 'bg-brand-600/20 text-brand-400 shadow-sm' : 'text-gray-400 hover:bg-slate-800 hover:text-gray-200' }}">
                     <span class="text-lg">{{ $item['icon'] }}</span>
                     {{ $item['label'] }}

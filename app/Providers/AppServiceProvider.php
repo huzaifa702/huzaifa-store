@@ -28,8 +28,12 @@ class AppServiceProvider extends ServiceProvider
 
         if (!app()->runningUnitTests()) {
             View::composer('layouts.app', function ($view) {
-                $view->with('navCategories', Category::where('is_active', true)
-                    ->orderBy('sort_order')->get());
+                try {
+                    $view->with('navCategories', Category::where('is_active', true)
+                        ->orderBy('sort_order')->get());
+                } catch (\Throwable $e) {
+                    $view->with('navCategories', collect());
+                }
             });
         }
     }

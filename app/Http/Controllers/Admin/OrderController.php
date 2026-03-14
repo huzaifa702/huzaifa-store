@@ -45,12 +45,16 @@ class OrderController extends Controller
             $order->payment->update(['status' => 'completed']);
         }
 
-        ActivityLogService::log(
-            'order_status_changed',
-            "Order {$order->order_number} status changed from {$oldStatus} to {$request->status}",
-            null,
-            $order
-        );
+        try {
+            ActivityLogService::log(
+                'order_status_changed',
+                "Order {$order->order_number} status changed from {$oldStatus} to {$request->status}",
+                null,
+                $order
+            );
+        } catch (\Throwable $e) {
+            // Don't block status update
+        }
 
         return back()->with('success', 'Order status updated successfully!');
     }
@@ -77,12 +81,16 @@ class OrderController extends Controller
         // Soft delete the order
         $order->delete();
 
-        ActivityLogService::log(
-            'order_deleted',
-            "Order {$orderNumber} was deleted",
-            null,
-            null
-        );
+        try {
+            ActivityLogService::log(
+                'order_deleted',
+                "Order {$orderNumber} was deleted",
+                null,
+                null
+            );
+        } catch (\Throwable $e) {
+            // Don't block deletion
+        }
 
         return redirect()->route('admin.orders.index')->with('success', "Order {$orderNumber} has been deleted successfully.");
     }
