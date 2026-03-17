@@ -11,21 +11,17 @@ class CategoryController extends Controller
     {
         $query = $category->products()->where('is_active', true)->with('primaryImage', 'category');
 
-        if ($request->filled('sort')) {
-            match ($request->sort) {
-                'price_low' => $query->orderBy('price', 'asc'),
-                'price_high' => $query->orderBy('price', 'desc'),
-                'newest' => $query->orderBy('created_at', 'desc'),
-                default => $query->orderBy('created_at', 'desc'),
-            };
-        } else {
-            $query->orderBy('created_at', 'desc');
-        }
+        // Apply sorting based on the "sort" query parameter
+        $sort = $request->input('sort', 'all'); // Default to 'all' (view all products)
 
-        // Add deterministic fallback to guarantee "line by line" order
-        $query->orderBy('id', 'desc');
+        match ($sort) {
+            'newest'     => $query->orderBy('created_at', 'desc')->orderBy('id', 'desc'),
+            'price_low'  => $query->orderBy('price', 'asc')->orderBy('id', 'asc'),
+            'price_high' => $query->orderBy('price', 'desc')->orderBy('id', 'desc'),
+            default      => $query->orderBy('id', 'desc'), // "all" — just show all by ID
+        };
 
-        $products = $query->paginate(12);
+        $products = $query->paginate(24); // Show more products per page
         $categories = Category::where('is_active', true)->orderBy('sort_order')->get();
 
         return view('categories.show', compact('category', 'products', 'categories'));

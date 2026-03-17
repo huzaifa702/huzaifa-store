@@ -16,7 +16,7 @@
         <div class="lg:w-64 flex-shrink-0">
             <div class="bg-dark-900 border border-dark-800 rounded-2xl p-6 sticky top-24 animate-on-scroll">
                 <h3 class="font-bold text-lg mb-4 text-white">Filters</h3>
-                <form action="{{ route('products.index') }}" method="GET">
+                <form id="filterForm" action="{{ route('products.index') }}" method="GET">
                     <!-- Categories -->
                     <div class="mb-6">
                         <h4 class="font-semibold text-sm text-gray-400 mb-3 uppercase tracking-wider">Category</h4>
@@ -47,7 +47,8 @@
                     <div class="mb-6">
                         <h4 class="font-semibold text-sm text-gray-400 mb-3 uppercase tracking-wider">Sort By</h4>
                         <select name="sort" class="w-full px-3 py-2 bg-dark-800 border border-dark-700 rounded-lg text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500">
-                            <option value="newest" {{ request('sort') == 'newest' || !request()->has('sort') ? 'selected' : '' }}>Newest</option>
+                            <option value="all" {{ request('sort', 'all') == 'all' ? 'selected' : '' }}>View All Products</option>
+                            <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Newest</option>
                             <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low to High</option>
                             <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price: High to Low</option>
                         </select>
@@ -62,6 +63,9 @@
         <div class="flex-1">
             <div class="flex items-center justify-between mb-6 animate-on-scroll">
                 <p class="text-gray-500 text-sm">Showing {{ $products->count() }} of {{ $products->total() }} products</p>
+                @if(request('category') || request('min_price') || request('max_price') || request('sort'))
+                    <a href="{{ route('products.index') }}" class="text-brand-400 hover:text-brand-300 text-sm font-medium transition-colors">Clear All Filters ✕</a>
+                @endif
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 product-grid">
@@ -72,6 +76,7 @@
                         <div class="text-6xl mb-4">🔍</div>
                         <h3 class="text-xl font-bold text-gray-400">No products found</h3>
                         <p class="text-gray-400 mt-2">Try adjusting your filters</p>
+                        <a href="{{ route('products.index') }}" class="text-brand-400 font-semibold mt-4 inline-block hover:text-brand-300">View all products →</a>
                     </div>
                 @endforelse
             </div>
@@ -83,4 +88,28 @@
         </div>
     </div>
 </div>
+
+{{-- Auto-submit filters when category radio or sort dropdown changes --}}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('filterForm');
+    if (!form) return;
+
+    // Auto-submit when user clicks a category radio button
+    const radios = form.querySelectorAll('input[type="radio"]');
+    radios.forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            form.submit();
+        });
+    });
+
+    // Auto-submit when user changes the sort dropdown
+    const sortSelect = form.querySelector('select[name="sort"]');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', function() {
+            form.submit();
+        });
+    }
+});
+</script>
 @endsection

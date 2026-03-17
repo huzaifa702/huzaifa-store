@@ -34,17 +34,30 @@
         @keyframes zoomIn { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
     </style>
 
-    <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center gap-3">
+    <!-- Sort Buttons -->
+    <div class="flex flex-wrap items-center justify-between mb-6 gap-3">
+        <div class="flex flex-wrap items-center gap-2">
             <span class="text-gray-500 text-sm">Sort by:</span>
-            <div class="flex gap-2">
-                @foreach(['newest' => 'Newest', 'price_low' => 'Price: Low to High', 'price_high' => 'Price: High to Low'] as $val => $label)
-                    <a href="{{ route('categories.show', $category) }}?sort={{ $val }}" class="px-3 py-1 rounded-lg text-sm font-medium {{ request('sort', 'newest') == $val ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'bg-dark-800 text-gray-400 hover:bg-dark-700 border border-dark-700' }} transition-all">{{ $label }}</a>
-                @endforeach
-            </div>
+            @php
+                $currentSort = request('sort', 'all');
+                $sortOptions = [
+                    'all' => 'View All',
+                    'newest' => 'Newest',
+                    'price_low' => 'Price: Low to High',
+                    'price_high' => 'Price: High to Low',
+                ];
+            @endphp
+            @foreach($sortOptions as $val => $label)
+                <a href="{{ route('categories.show', $category) }}?sort={{ $val }}"
+                   class="px-4 py-1.5 rounded-lg text-sm font-medium transition-all
+                   {{ $currentSort == $val ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/20' : 'bg-dark-800 text-gray-400 hover:bg-dark-700 border border-dark-700' }}">
+                    {{ $label }}
+                </a>
+            @endforeach
         </div>
     </div>
 
+    <!-- Product Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 product-grid">
         @forelse($products as $product)
             @include('partials.product-card', ['product' => $product])
@@ -57,6 +70,7 @@
         @endforelse
     </div>
 
+    <!-- Pagination -->
     <div class="mt-8">{{ $products->withQueryString()->links() }}</div>
 </div>
 @endsection
