@@ -29,12 +29,14 @@ class ProductController extends Controller
                 'price_low' => $query->orderBy('price', 'asc'),
                 'price_high' => $query->orderBy('price', 'desc'),
                 'newest' => $query->orderBy('created_at', 'desc'),
-                'popular' => $query->orderBy('views_count', 'desc'),
                 default => $query->orderBy('created_at', 'desc'),
             };
         } else {
             $query->orderBy('created_at', 'desc');
         }
+        
+        // Add deterministic fallback to guarantee "line by line" order
+        $query->orderBy('id', 'desc');
 
         $products = $query->paginate(12);
         $categories = Category::where('is_active', true)->orderBy('sort_order')->get();

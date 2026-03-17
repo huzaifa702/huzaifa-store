@@ -1,0 +1,5 @@
+0: Sonic Facial Cleansing Brush (active:1) | img: https://picsum.photos/seed/162/600/600
+1: Argan Oil Hair Treatment (active:1) | img: https://picsum.photos/seed/163/600/600
+2: Luxury Perfume Collection (active:1) | img: https://picsum.photos/seed/164/600/600
+3: Teeth Whitening Kit (active:1) | img: https://picsum.photos/seed/165/600/600
+4: Body Scrub Coffee (active:1) | img: https://picsum.photos/seed/166/600/600

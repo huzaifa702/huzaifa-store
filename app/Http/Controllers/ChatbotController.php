@@ -101,7 +101,7 @@ class ChatbotController extends Controller
         }
 
         if (Auth::check()) {
-            $productsData = !empty($response['products']) ? json_encode($response['products']) : null;
+            $productsData = !empty($response['products']) ? $response['products'] : null;
             ChatHistory::create([
                 'user_id' => Auth::id(),
                 'message' => $response['text'],
@@ -157,7 +157,7 @@ class ChatbotController extends Controller
             $replyText = "🔍 **AI Image Analysis:**\n\n" . $analysis . "\n\n" . ($products->isNotEmpty() ? "Here are matching products:" : "I couldn't find exact matches, but browse our categories!");
 
             if (Auth::check()) {
-                $productsData = $products->isNotEmpty() ? json_encode($products) : null;
+                $productsData = $products->isNotEmpty() ? $products : null;
                 ChatHistory::create([
                     'user_id' => Auth::id(),
                     'message' => $replyText,
@@ -192,7 +192,7 @@ class ChatbotController extends Controller
                 'message' => $replyText,
                 'sender' => 'ai',
                 'type' => 'products',
-                'products_data' => json_encode($products)
+                'products_data' => $products
             ]);
         }
 

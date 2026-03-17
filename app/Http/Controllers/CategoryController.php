@@ -22,6 +22,9 @@ class CategoryController extends Controller
             $query->orderBy('created_at', 'desc');
         }
 
+        // Add deterministic fallback to guarantee "line by line" order
+        $query->orderBy('id', 'desc');
+
         $products = $query->paginate(12);
         $categories = Category::where('is_active', true)->orderBy('sort_order')->get();
 

@@ -47,10 +47,9 @@
                     <div class="mb-6">
                         <h4 class="font-semibold text-sm text-gray-400 mb-3 uppercase tracking-wider">Sort By</h4>
                         <select name="sort" class="w-full px-3 py-2 bg-dark-800 border border-dark-700 rounded-lg text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500">
-                            <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Newest</option>
+                            <option value="newest" {{ request('sort') == 'newest' || !request()->has('sort') ? 'selected' : '' }}>Newest</option>
                             <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low to High</option>
                             <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price: High to Low</option>
-                            <option value="popular" {{ request('sort') == 'popular' ? 'selected' : '' }}>Popular</option>
                         </select>
                     </div>
 
