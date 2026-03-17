@@ -851,20 +851,45 @@
         document.addEventListener('DOMContentLoaded', () => {
             gsap.registerPlugin(ScrollTrigger);
 
-            // Animate elements on scroll
+            // Animate elements on scroll — safe: never leaves elements invisible
             gsap.utils.toArray('.animate-on-scroll').forEach(el => {
                 gsap.from(el, {
-                    scrollTrigger: { trigger: el, start: 'top 85%', toggleActions: 'play none none none' },
-                    y: 50, opacity: 0, duration: 0.9, ease: 'power3.out'
+                    scrollTrigger: { trigger: el, start: 'top 90%', toggleActions: 'play none none none' },
+                    y: 30, opacity: 0, duration: 0.6, ease: 'power2.out',
+                    clearProps: 'all' // CRITICAL: removes inline styles after animation so CSS takes over
                 });
             });
 
-            // Stagger product cards
+            // Product grid cards — SAFE animation that guarantees visibility
             gsap.utils.toArray('.product-grid').forEach(grid => {
-                gsap.from(grid.children, {
-                    scrollTrigger: { trigger: grid, start: 'top 85%' },
-                    y: 80, opacity: 0, duration: 0.7, stagger: 0.1, ease: 'power3.out'
+                const cards = grid.children;
+                if (!cards.length) return;
+
+                // Set initial state
+                gsap.set(cards, { opacity: 0, y: 40 });
+
+                // Animate cards in with ScrollTrigger
+                ScrollTrigger.create({
+                    trigger: grid,
+                    start: 'top 95%',
+                    once: true,
+                    onEnter: () => {
+                        gsap.to(cards, {
+                            opacity: 1, y: 0,
+                            duration: 0.5, stagger: 0.08, ease: 'power2.out',
+                            clearProps: 'all' // Remove inline styles after animation
+                        });
+                    }
                 });
+
+                // SAFETY NET: If ScrollTrigger doesn't fire within 1 second, force-show all cards
+                setTimeout(() => {
+                    Array.from(cards).forEach(card => {
+                        if (parseFloat(getComputedStyle(card).opacity) < 0.5) {
+                            gsap.to(card, { opacity: 1, y: 0, duration: 0.3, clearProps: 'all' });
+                        }
+                    });
+                }, 1000);
             });
 
             // Parallax section headings
